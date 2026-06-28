@@ -1,0 +1,410 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
+import { createClient } from '@/lib/supabase/client'
+import { generateTrackingId, formatCurrency } from '@/lib/utils'
+import { Package, MapPin, User, Phone, ChevronRight } from 'lucide-react'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
+
+const PACKAGE_TYPES = [
+  { value: 'document', label: 'Document', basePrice: 50, perKg: 10, maxKg: 0.5 },
+  { value: 'parcel', label: 'Parcel', basePrice: 80, perKg: 20, maxKg: 20 },
+  { value: 'fragile', label: 'Fragile', basePrice: 150, perKg: 25, maxKg: 50 },
+  { value: 'heavy', label: 'Heavy / Oversized', basePrice: 200, perKg: 30, maxKg: 100 },
+]
+
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
+  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+  'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+  'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+  'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu and Kashmir', 'Ladakh',
+]
+
+interface FormData {
+  senderName: string
+  senderPhone: string
+  senderAddress: string
+  senderCity: string
+  senderPincode: string
+  senderState: string
+  receiverName: string
+  receiverPhone: string
+  receiverAddress: string
+  receiverCity: string
+  receiverPincode: string
+  receiverState: string
+  packageType: string
+  weightKg: string
+  description: string
+}
+
+const initialForm: FormData = {
+  senderName: '', senderPhone: '', senderAddress: '', senderCity: '', senderPincode: '', senderState: '',
+  receiverName: '', receiverPhone: '', receiverAddress: '', receiverCity: '', receiverPincode: '', receiverState: '',
+  packageType: 'parcel', weightKg: '1', description: '',
+}
+
+export default function BookPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [form, setForm] = useState<FormData>(initialForm)
+  const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const supabase = createClient()
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user)
+      if (data.user) {
+        setForm((f) => ({
+          ...f,
+          senderName: data.user?.user_metadata?.full_name || data.user?.user_metadata?.name || '',
+          senderPhone: data.user?.phone || '',
+        }))
+      }
+    })
+  }, [])
+
+  const selectedPkg = PACKAGE_TYPES.find((p) => p.value === form.packageType) || PACKAGE_TYPES[1]
+  const weight = parseFloat(form.weightKg) || 0
+  const estimatedAmount = Math.round(selectedPkg.basePrice + weight * selectedPkg.perKg)
+
+  const update = (key: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setForm((f) => ({ ...f, [key]: e.target.value }))
+  }
+
+  const handlePayment = async () => {
+    if (!user) {
+      router.push('/auth/login?next=/book')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      // Create Razorpay order via API
+      const orderRes = await fetch('/api/payment/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: estimatedAmount }),
+      })
+      const orderData = await orderRes.json()
+      if (!orderRes.ok) throw new Error(orderData.error || 'Failed to create order')
+
+      // Load Razorpay script
+      const script = document.createElement('script')
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+      document.body.appendChild(script)
+
+      await new Promise<void>((resolve) => { script.onload = () => resolve() })
+
+      const trackingId = generateTrackingId()
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'SpeedU Courier',
+        description: `Booking - ${trackingId}`,
+        order_id: orderData.id,
+        prefill: {
+          name: form.senderName,
+          contact: form.senderPhone,
+          email: user.email || '',
+        },
+        theme: { color: '#c8102e' },
+        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string }) => {
+          // Save booking to database
+          const { error: dbError } = await supabase.from('bookings').insert({
+            tracking_id: trackingId,
+            user_id: user.id,
+            sender_name: form.senderName,
+            sender_phone: form.senderPhone,
+            sender_address: form.senderAddress,
+            sender_city: form.senderCity,
+            sender_pincode: form.senderPincode,
+            sender_state: form.senderState,
+            receiver_name: form.receiverName,
+            receiver_phone: form.receiverPhone,
+            receiver_address: form.receiverAddress,
+            receiver_city: form.receiverCity,
+            receiver_pincode: form.receiverPincode,
+            receiver_state: form.receiverState,
+            package_type: form.packageType,
+            weight_kg: weight,
+            description: form.description,
+            amount: estimatedAmount * 100, // paise
+            payment_status: 'paid',
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            status: 'confirmed',
+          })
+
+          if (dbError) throw new Error(dbError.message)
+
+          router.push(`/booking-confirmed?id=${trackingId}`)
+        },
+      }
+
+      // @ts-expect-error: Razorpay is loaded via script tag
+      const rzp = new window.Razorpay(options)
+      rzp.open()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <Navbar />
+      <main className="bg-gray-50 min-h-screen py-10">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-extrabold text-gray-900">Book a Courier</h1>
+            <p className="text-gray-500 mt-2">Fill in the details below to schedule a pickup</p>
+          </div>
+
+          {/* Step indicator */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= s ? 'bg-red-700 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                  {s}
+                </div>
+                {s < 3 && <div className={`w-12 h-1 rounded ${step > s ? 'bg-red-700' : 'bg-gray-200'}`} />}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-center gap-16 text-xs text-gray-500 mb-8">
+            <span className={step === 1 ? 'text-red-700 font-semibold' : ''}>Sender</span>
+            <span className={step === 2 ? 'text-red-700 font-semibold' : ''}>Receiver</span>
+            <span className={step === 3 ? 'text-red-700 font-semibold' : ''}>Package & Pay</span>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-6 text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            {/* Step 1: Sender */}
+            {step === 1 && (
+              <div>
+                <div className="flex items-center gap-2 mb-6">
+                  <User className="h-5 w-5 text-red-700" />
+                  <h2 className="text-xl font-bold text-gray-900">Sender Details</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                    <input type="text" placeholder="Your full name" value={form.senderName} onChange={update('senderName')} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 border-2 border-r-0 border-gray-200 rounded-l-lg bg-gray-50 text-gray-500 text-sm">+91</span>
+                      <input type="tel" placeholder="10-digit mobile" value={form.senderPhone} onChange={(e) => setForm((f) => ({ ...f, senderPhone: e.target.value.replace(/\D/g, '').slice(0, 10) }))} className="flex-1 border-2 border-gray-200 rounded-r-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address *</label>
+                    <input type="text" placeholder="Flat, Street, Area" value={form.senderAddress} onChange={update('senderAddress')} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                    <input type="text" placeholder="City" value={form.senderCity} onChange={update('senderCity')} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Pincode *</label>
+                    <input type="text" placeholder="6-digit pincode" value={form.senderPincode} onChange={(e) => setForm((f) => ({ ...f, senderPincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                    <select value={form.senderState} onChange={update('senderState')} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition">
+                      <option value="">Select state</option>
+                      {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (!form.senderName || !form.senderPhone || !form.senderAddress || !form.senderCity || !form.senderPincode || !form.senderState) {
+                      setError('Please fill all sender details')
+                      return
+                    }
+                    setError('')
+                    setStep(2)
+                  }}
+                  className="mt-6 w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  Next: Receiver Details <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            )}
+
+            {/* Step 2: Receiver */}
+            {step === 2 && (
+              <div>
+                <div className="flex items-center gap-2 mb-6">
+                  <MapPin className="h-5 w-5 text-red-700" />
+                  <h2 className="text-xl font-bold text-gray-900">Receiver Details</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Receiver Name *</label>
+                    <input type="text" placeholder="Receiver full name" value={form.receiverName} onChange={update('receiverName')} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Receiver Phone *</label>
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 border-2 border-r-0 border-gray-200 rounded-l-lg bg-gray-50 text-gray-500 text-sm">+91</span>
+                      <input type="tel" placeholder="10-digit mobile" value={form.receiverPhone} onChange={(e) => setForm((f) => ({ ...f, receiverPhone: e.target.value.replace(/\D/g, '').slice(0, 10) }))} className="flex-1 border-2 border-gray-200 rounded-r-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Address *</label>
+                    <input type="text" placeholder="Flat, Street, Area" value={form.receiverAddress} onChange={update('receiverAddress')} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                    <input type="text" placeholder="City" value={form.receiverCity} onChange={update('receiverCity')} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Pincode *</label>
+                    <input type="text" placeholder="6-digit pincode" value={form.receiverPincode} onChange={(e) => setForm((f) => ({ ...f, receiverPincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                    <select value={form.receiverState} onChange={update('receiverState')} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition">
+                      <option value="">Select state</option>
+                      {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-6">
+                  <button onClick={() => setStep(1)} className="flex-1 border-2 border-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-colors">
+                    Back
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!form.receiverName || !form.receiverPhone || !form.receiverAddress || !form.receiverCity || !form.receiverPincode || !form.receiverState) {
+                        setError('Please fill all receiver details')
+                        return
+                      }
+                      setError('')
+                      setStep(3)
+                    }}
+                    className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    Next: Package <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Package & Payment */}
+            {step === 3 && (
+              <div>
+                <div className="flex items-center gap-2 mb-6">
+                  <Package className="h-5 w-5 text-red-700" />
+                  <h2 className="text-xl font-bold text-gray-900">Package Details & Payment</h2>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Package Type *</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {PACKAGE_TYPES.map((pkg) => (
+                        <label key={pkg.value} className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${form.packageType === pkg.value ? 'border-red-700 bg-red-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                          <input type="radio" name="packageType" value={pkg.value} checked={form.packageType === pkg.value} onChange={update('packageType')} className="mt-0.5 accent-red-700" />
+                          <div>
+                            <div className="font-semibold text-sm text-gray-900">{pkg.label}</div>
+                            <div className="text-xs text-gray-500">from ₹{pkg.basePrice}</div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Weight (kg) *</label>
+                    <input type="number" placeholder={`Max ${selectedPkg.maxKg} kg`} value={form.weightKg} onChange={update('weightKg')} min="0.1" max={selectedPkg.maxKg} step="0.1" className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Package Description (optional)</label>
+                    <textarea placeholder="e.g. Books, clothes, mobile phone..." value={form.description} onChange={update('description')} rows={3} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition resize-none" />
+                  </div>
+                </div>
+
+                {/* Price Summary */}
+                <div className="mt-6 bg-gray-50 rounded-xl p-5 border border-gray-200">
+                  <h3 className="font-bold text-gray-900 mb-3">Order Summary</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between text-gray-600">
+                      <span>Base price ({selectedPkg.label})</span>
+                      <span>₹{selectedPkg.basePrice}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Weight charge ({weight} kg × ₹{selectedPkg.perKg})</span>
+                      <span>₹{Math.round(weight * selectedPkg.perKg)}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600">
+                      <span>GST (18%)</span>
+                      <span>₹{Math.round(estimatedAmount * 0.18)}</span>
+                    </div>
+                    <hr className="border-gray-300" />
+                    <div className="flex justify-between font-bold text-gray-900 text-base">
+                      <span>Total</span>
+                      <span className="text-red-700">{formatCurrency(Math.round(estimatedAmount * 1.18))}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Route Summary */}
+                <div className="mt-4 bg-blue-50 rounded-xl p-4 border border-blue-100 text-sm">
+                  <div className="flex justify-between text-gray-700">
+                    <span><strong>From:</strong> {form.senderCity}, {form.senderState}</span>
+                    <span><strong>To:</strong> {form.receiverCity}, {form.receiverState}</span>
+                  </div>
+                </div>
+
+                {!user && (
+                  <div className="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg px-4 py-3 text-sm">
+                    You need to <a href="/auth/login" className="font-semibold underline">sign in</a> to complete the booking.
+                  </div>
+                )}
+
+                <div className="flex gap-3 mt-6">
+                  <button onClick={() => setStep(2)} className="flex-1 border-2 border-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-colors">
+                    Back
+                  </button>
+                  <button
+                    onClick={handlePayment}
+                    disabled={loading || !form.weightKg || parseFloat(form.weightKg) <= 0}
+                    className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <Phone className="h-4 w-4" />
+                    {loading ? 'Processing...' : `Pay ${formatCurrency(Math.round(estimatedAmount * 1.18))}`}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 text-center mt-3">Secured by Razorpay · UPI, Cards, Net Banking accepted</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </>
+  )
+}
