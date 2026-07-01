@@ -3,17 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Package, Mail, Phone } from 'lucide-react'
+import { Package, Mail } from 'lucide-react'
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<'email' | 'phone'>('email')
   const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [otp, setOtp] = useState('')
-  const [step, setStep] = useState<'input' | 'otp'>('input')
+  const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
   const supabase = createClient()
 
   const handleGoogleLogin = async () => {
@@ -26,46 +22,17 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  const handleEmailOtp = async () => {
+  const handleEmailLink = async () => {
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signInWithOtp({ email })
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    })
     if (error) {
       setError(error.message)
     } else {
-      setStep('otp')
-      setMessage('Check your email for the OTP code.')
-    }
-    setLoading(false)
-  }
-
-  const handlePhoneOtp = async () => {
-    setLoading(true)
-    setError('')
-    const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`
-    const { error } = await supabase.auth.signInWithOtp({ phone: formattedPhone })
-    if (error) {
-      setError(error.message)
-    } else {
-      setStep('otp')
-      setMessage('OTP sent to your mobile number.')
-    }
-    setLoading(false)
-  }
-
-  const handleVerifyOtp = async () => {
-    setLoading(true)
-    setError('')
-    const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`
-    const { error } = await supabase.auth.verifyOtp(
-      mode === 'email'
-        ? { email, token: otp, type: 'email' }
-        : { phone: formattedPhone, token: otp, type: 'sms' }
-    )
-    if (error) {
-      setError(error.message)
-    } else {
-      window.location.href = '/dashboard'
+      setSent(true)
     }
     setLoading(false)
   }
@@ -88,13 +55,25 @@ export default function LoginPage() {
               {error}
             </div>
           )}
-          {message && (
-            <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-3 mb-6 text-sm">
-              {message}
-            </div>
-          )}
 
-          {step === 'input' && (
+          {sent ? (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="h-8 w-8 text-green-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Check your email</h2>
+              <p className="text-gray-500 text-sm mb-1">
+                We sent a login link to <strong>{email}</strong>
+              </p>
+              <p className="text-gray-400 text-sm">Click the link in the email to sign in.</p>
+              <button
+                onClick={() => { setSent(false); setEmail('') }}
+                className="mt-6 text-red-600 hover:text-red-800 text-sm font-semibold"
+              >
+                ← Use a different email
+              </button>
+            </div>
+          ) : (
             <>
               {/* Google Login */}
               <button
@@ -116,94 +95,29 @@ export default function LoginPage() {
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-3 bg-white text-gray-400">or continue with</span>
+                  <span className="px-3 bg-white text-gray-400">or continue with email</span>
                 </div>
               </div>
 
-              {/* Mode Toggle */}
-              <div className="flex rounded-lg border border-gray-200 p-1 mb-5">
-                <button
-                  onClick={() => setMode('email')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${mode === 'email' ? 'bg-red-700 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-                >
-                  <Mail className="h-4 w-4" /> Email OTP
-                </button>
-                <button
-                  onClick={() => setMode('phone')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${mode === 'phone' ? 'bg-red-700 text-white' : 'text-gray-600 hover:text-gray-900'}`}
-                >
-                  <Phone className="h-4 w-4" /> Mobile OTP
-                </button>
-              </div>
-
-              {mode === 'email' ? (
-                <>
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-red-500 transition"
-                  />
-                  <button
-                    onClick={handleEmailOtp}
-                    disabled={loading || !email}
-                    className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    {loading ? 'Sending...' : 'Send OTP to Email'}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="flex mb-4">
-                    <span className="inline-flex items-center px-3 border-2 border-r-0 border-gray-200 rounded-l-xl bg-gray-50 text-gray-500 text-sm font-medium">+91</span>
-                    <input
-                      type="tel"
-                      placeholder="10-digit mobile number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      className="flex-1 border-2 border-gray-200 rounded-r-xl px-4 py-3 focus:outline-none focus:border-red-500 transition"
-                    />
-                  </div>
-                  <button
-                    onClick={handlePhoneOtp}
-                    disabled={loading || phone.length < 10}
-                    className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-                  >
-                    {loading ? 'Sending...' : 'Send OTP to Mobile'}
-                  </button>
-                </>
-              )}
-            </>
-          )}
-
-          {step === 'otp' && (
-            <div>
-              <p className="text-gray-600 text-sm mb-5">
-                Enter the 6-digit OTP sent to <strong>{mode === 'email' ? email : `+91 ${phone}`}</strong>
-              </p>
               <input
-                type="text"
-                placeholder="Enter 6-digit OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                maxLength={6}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mb-4 text-center text-2xl font-mono tracking-widest focus:outline-none focus:border-red-500 transition"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && email && handleEmailLink()}
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-red-500 transition"
               />
               <button
-                onClick={handleVerifyOtp}
-                disabled={loading || otp.length < 6}
-                className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 mb-3"
+                onClick={handleEmailLink}
+                disabled={loading || !email}
+                className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
               >
-                {loading ? 'Verifying...' : 'Verify OTP'}
+                {loading ? 'Sending...' : 'Send Login Link'}
               </button>
-              <button
-                onClick={() => { setStep('input'); setOtp(''); setError(''); setMessage('') }}
-                className="w-full text-gray-500 hover:text-gray-700 text-sm py-2"
-              >
-                ← Change {mode === 'email' ? 'email' : 'number'}
-              </button>
-            </div>
+              <p className="text-xs text-gray-400 text-center mt-3">
+                We will send a magic link to your email — no password needed
+              </p>
+            </>
           )}
         </div>
 
