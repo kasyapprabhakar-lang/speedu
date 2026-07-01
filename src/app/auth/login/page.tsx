@@ -3,17 +3,24 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Package, Mail } from 'lucide-react'
+import { Package, Mail, Phone } from 'lucide-react'
+
+type Mode = 'email' | 'phone'
+type Step = 'input' | 'otp' | 'sent'
 
 export default function LoginPage() {
+  const [mode, setMode] = useState<Mode>('phone')
   const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
+  const [phone, setPhone] = useState('')
+  const [otp, setOtp] = useState('')
+  const [step, setStep] = useState<Step>('input')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const supabase = createClient()
 
   const handleGoogleLogin = async () => {
     setLoading(true)
+    setError('')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
@@ -32,9 +39,44 @@ export default function LoginPage() {
     if (error) {
       setError(error.message)
     } else {
-      setSent(true)
+      setStep('sent')
     }
     setLoading(false)
+  }
+
+  const handlePhoneOtp = async () => {
+    setLoading(true)
+    setError('')
+    const formattedPhone = `+91${phone}`
+    const { error } = await supabase.auth.signInWithOtp({ phone: formattedPhone })
+    if (error) {
+      setError(error.message)
+    } else {
+      setStep('otp')
+    }
+    setLoading(false)
+  }
+
+  const handleVerifyOtp = async () => {
+    setLoading(true)
+    setError('')
+    const { error } = await supabase.auth.verifyOtp({
+      phone: `+91${phone}`,
+      token: otp,
+      type: 'sms',
+    })
+    if (error) {
+      setError(error.message)
+    } else {
+      window.location.href = '/dashboard'
+    }
+    setLoading(false)
+  }
+
+  const reset = () => {
+    setStep('input')
+    setOtp('')
+    setError('')
   }
 
   return (
@@ -56,26 +98,58 @@ export default function LoginPage() {
             </div>
           )}
 
-          {sent ? (
+          {/* Email magic link sent */}
+          {step === 'sent' && (
             <div className="text-center py-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mail className="h-8 w-8 text-green-600" />
               </div>
               <h2 className="text-xl font-bold text-gray-900 mb-2">Check your email</h2>
-              <p className="text-gray-500 text-sm mb-1">
-                We sent a login link to <strong>{email}</strong>
-              </p>
+              <p className="text-gray-500 text-sm mb-1">We sent a login link to <strong>{email}</strong></p>
               <p className="text-gray-400 text-sm">Click the link in the email to sign in.</p>
-              <button
-                onClick={() => { setSent(false); setEmail('') }}
-                className="mt-6 text-red-600 hover:text-red-800 text-sm font-semibold"
-              >
+              <button onClick={reset} className="mt-6 text-red-600 hover:text-red-800 text-sm font-semibold">
                 ← Use a different email
               </button>
             </div>
-          ) : (
+          )}
+
+          {/* Phone OTP verification */}
+          {step === 'otp' && (
+            <div>
+              <div className="text-center mb-6">
+                <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Phone className="h-7 w-7 text-red-700" />
+                </div>
+                <p className="text-gray-600 text-sm">
+                  Enter the 6-digit OTP sent to <strong>+91 {phone}</strong>
+                </p>
+              </div>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="------"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                maxLength={6}
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 mb-4 text-center text-3xl font-mono tracking-widest focus:outline-none focus:border-red-500 transition"
+              />
+              <button
+                onClick={handleVerifyOtp}
+                disabled={loading || otp.length < 6}
+                className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 mb-3"
+              >
+                {loading ? 'Verifying...' : 'Verify OTP'}
+              </button>
+              <button onClick={reset} className="w-full text-gray-500 hover:text-gray-700 text-sm py-2">
+                ← Change number
+              </button>
+            </div>
+          )}
+
+          {/* Input step */}
+          {step === 'input' && (
             <>
-              {/* Google Login */}
+              {/* Google */}
               <button
                 onClick={handleGoogleLogin}
                 disabled={loading}
@@ -95,28 +169,68 @@ export default function LoginPage() {
                   <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-3 bg-white text-gray-400">or continue with email</span>
+                  <span className="px-3 bg-white text-gray-400">or continue with</span>
                 </div>
               </div>
 
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && email && handleEmailLink()}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-red-500 transition"
-              />
-              <button
-                onClick={handleEmailLink}
-                disabled={loading || !email}
-                className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Sending...' : 'Send Login Link'}
-              </button>
-              <p className="text-xs text-gray-400 text-center mt-3">
-                We will send a magic link to your email — no password needed
-              </p>
+              {/* Mode Toggle */}
+              <div className="flex rounded-lg border border-gray-200 p-1 mb-5">
+                <button
+                  onClick={() => setMode('phone')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${mode === 'phone' ? 'bg-red-700 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                >
+                  <Phone className="h-4 w-4" /> Mobile OTP
+                </button>
+                <button
+                  onClick={() => setMode('email')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-colors ${mode === 'email' ? 'bg-red-700 text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                >
+                  <Mail className="h-4 w-4" /> Email Link
+                </button>
+              </div>
+
+              {mode === 'phone' ? (
+                <>
+                  <div className="flex mb-4">
+                    <span className="inline-flex items-center px-3 border-2 border-r-0 border-gray-200 rounded-l-xl bg-gray-50 text-gray-700 font-semibold text-sm">+91</span>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="10-digit mobile number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      onKeyDown={(e) => e.key === 'Enter' && phone.length === 10 && handlePhoneOtp()}
+                      className="flex-1 border-2 border-gray-200 rounded-r-xl px-4 py-3 focus:outline-none focus:border-red-500 transition"
+                    />
+                  </div>
+                  <button
+                    onClick={handlePhoneOtp}
+                    disabled={loading || phone.length < 10}
+                    className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Sending OTP...' : 'Send OTP'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && email && handleEmailLink()}
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-red-500 transition"
+                  />
+                  <button
+                    onClick={handleEmailLink}
+                    disabled={loading || !email}
+                    className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Sending...' : 'Send Login Link'}
+                  </button>
+                  <p className="text-xs text-gray-400 text-center mt-3">We will send a magic link — no password needed</p>
+                </>
+              )}
             </>
           )}
         </div>
