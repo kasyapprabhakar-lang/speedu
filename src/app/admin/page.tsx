@@ -294,47 +294,66 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    {/* Driver details (if assigned) */}
-                    {b.driver_name && (
-                      <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                        <div className="flex items-center gap-2 text-blue-700 font-semibold text-sm mb-1">
-                          <Truck className="h-4 w-4" /> Assigned Driver
-                        </div>
-                        <p className="font-semibold text-gray-900">{b.driver_name}</p>
-                        <a href={`tel:+91${b.driver_phone}`} className="text-sm text-blue-600">+91 {b.driver_phone}</a>
+                    {/* Driver details — always shown, always editable */}
+                    <div className="bg-white rounded-xl p-4 border border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                          <Truck className="h-4 w-4 text-blue-600" />
+                          {b.driver_name ? 'Assigned Driver' : 'Assign Driver'}
+                        </h4>
+                        {b.driver_name && (
+                          <div className="text-right">
+                            <p className="text-sm font-semibold text-gray-800">{b.driver_name}</p>
+                            <a href={`tel:+91${b.driver_phone}`} className="text-xs text-blue-600">+91 {b.driver_phone}</a>
+                          </div>
+                        )}
                       </div>
-                    )}
-
-                    {/* Assign driver (for pending/confirmed) */}
-                    {['pending', 'confirmed'].includes(b.status) && (
-                      <div className="bg-white rounded-xl p-4 border border-gray-200">
-                        <h4 className="font-semibold text-gray-900 text-sm mb-3">Assign Driver & Confirm Order</h4>
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-                          <input
-                            type="text"
-                            placeholder="Driver name"
-                            value={driverInput.name}
-                            onChange={(e) => setDriverInputs(prev => ({ ...prev, [b.id]: { ...driverInput, name: e.target.value } }))}
-                            className="border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500"
-                          />
-                          <input
-                            type="tel"
-                            placeholder="Driver phone"
-                            value={driverInput.phone}
-                            onChange={(e) => setDriverInputs(prev => ({ ...prev, [b.id]: { ...driverInput, phone: e.target.value.replace(/\D/g, '').slice(0, 10) } }))}
-                            className="border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500"
-                          />
-                        </div>
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <input
+                          type="text"
+                          placeholder={b.driver_name || 'Driver name'}
+                          value={driverInput.name}
+                          onChange={(e) => setDriverInputs(prev => ({ ...prev, [b.id]: { ...driverInput, name: e.target.value } }))}
+                          className="border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500"
+                        />
+                        <input
+                          type="tel"
+                          placeholder={b.driver_phone || 'Driver phone'}
+                          value={driverInput.phone}
+                          onChange={(e) => setDriverInputs(prev => ({ ...prev, [b.id]: { ...driverInput, phone: e.target.value.replace(/\D/g, '').slice(0, 10) } }))}
+                          className="border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-500"
+                        />
+                      </div>
+                      <div className="flex gap-2">
                         <button
-                          onClick={() => updateStatus(b.id, 'confirmed', driverInput.name, driverInput.phone)}
-                          disabled={!driverInput.name || !driverInput.phone || updating === b.id}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                          onClick={async () => {
+                            if (!driverInput.name && !driverInput.phone) return
+                            setUpdating(b.id)
+                            await supabase.from('bookings').update({
+                              driver_name: driverInput.name || b.driver_name,
+                              driver_phone: driverInput.phone || b.driver_phone,
+                            }).eq('id', b.id)
+                            await loadBookings()
+                            setUpdating(null)
+                            setDriverInputs(prev => { const n = { ...prev }; delete n[b.id]; return n })
+                          }}
+                          disabled={(!driverInput.name && !driverInput.phone) || updating === b.id}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50"
                         >
-                          <CheckCircle className="h-4 w-4" />
-                          {updating === b.id ? 'Confirming...' : 'Confirm & Notify Customer on WhatsApp'}
+                          {updating === b.id ? 'Saving...' : b.driver_name ? 'Update Driver' : 'Save Driver'}
                         </button>
+                        {b.status === 'pending' && (
+                          <button
+                            onClick={() => updateStatus(b.id, 'confirmed', driverInput.name || b.driver_name || '', driverInput.phone || b.driver_phone || '')}
+                            disabled={(!driverInput.name && !b.driver_name) || updating === b.id}
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            {updating === b.id ? 'Confirming...' : 'Confirm & Notify'}
+                          </button>
+                        )}
                       </div>
-                    )}
+                    </div>
 
                     {/* Status update buttons */}
                     {nextStatuses.length > 0 && (
