@@ -59,19 +59,60 @@ export default function HomePage() {
       <Navbar />
       <main>
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-red-700 via-red-800 to-red-900 text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+        <section className="relative bg-red-900 text-white overflow-hidden min-h-[580px] flex items-center">
+
+          {/* ── Decorative diagonal panels (Porter-style) ── */}
+          <div className="absolute inset-0 pointer-events-none select-none">
+            {/* base gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-red-950 via-red-900 to-red-800" />
+
+            {/* Panel 1 – bike */}
+            <div
+              className="absolute top-0 bottom-0 right-[38%] w-[28%] bg-red-800 flex items-center justify-center overflow-hidden"
+              style={{ clipPath: 'polygon(12% 0, 100% 0, 88% 100%, 0% 100%)' }}
+            >
+              <span className="text-[170px] leading-none opacity-30 transform -rotate-6 translate-x-4">🏍️</span>
+            </div>
+
+            {/* Panel 2 – mini truck */}
+            <div
+              className="absolute top-0 bottom-0 right-[13%] w-[28%] bg-red-700 flex items-center justify-center overflow-hidden"
+              style={{ clipPath: 'polygon(12% 0, 100% 0, 88% 100%, 0% 100%)' }}
+            >
+              <span className="text-[160px] leading-none opacity-25 translate-x-2">🚐</span>
+            </div>
+
+            {/* Panel 3 – movers */}
+            <div
+              className="absolute top-0 bottom-0 right-[-6%] w-[22%] bg-red-600 flex items-center justify-center overflow-hidden"
+              style={{ clipPath: 'polygon(14% 0, 100% 0, 100% 100%, 0% 100%)' }}
+            >
+              <span className="text-[140px] leading-none opacity-20 rotate-6">🏠</span>
+            </div>
+
+            {/* Left fade so text stays readable */}
+            <div className="absolute inset-0 bg-gradient-to-r from-red-950 via-red-900/85 to-transparent" />
+
+            {/* Subtle dot pattern */}
+            <div
+              className="absolute inset-0 opacity-[0.04]"
+              style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+            />
+          </div>
+
+          {/* ── Content ── */}
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
-                <div className="inline-flex items-center gap-2 bg-red-600 bg-opacity-50 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+                <div className="inline-flex items-center gap-2 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
                   <span className="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"></span>
                   Same Day Delivery Within City
                 </div>
-                <h1 className="text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
+                <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight mb-4 drop-shadow-lg">
                   SpeedU matlab{' '}
                   <span className="text-yellow-300">Speed &amp; Secure!</span>
                 </h1>
-                <p className="text-red-100 text-lg mb-8 leading-relaxed">
+                <p className="text-red-100 text-lg mb-8 leading-relaxed max-w-md">
                   Fast and reliable within-city courier pickup and delivery. Book in 2 minutes, track in real-time.
                 </p>
                 <div className="flex gap-3">
