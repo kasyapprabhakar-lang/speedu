@@ -70,9 +70,9 @@ export default function HomePage() {
               className="absolute inset-0 w-full h-full object-cover object-center"
             />
             {/* Dark overlay — keeps text readable */}
-            <div className="absolute inset-0 bg-red-950 opacity-50" />
+            <div className="absolute inset-0 bg-red-950 opacity-35" />
             {/* Left-to-right fade so left text is clearest */}
-            <div className="absolute inset-0 bg-gradient-to-r from-red-950/90 via-red-950/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-red-950/80 via-red-950/30 to-transparent" />
           </div>
 
           {/* ── Content ── */}
@@ -91,7 +91,7 @@ export default function HomePage() {
                   Fast and reliable within-city courier pickup and delivery. Book in 2 minutes, track in real-time.
                 </p>
                 <div className="flex gap-3">
-                  <Link href="/track" className="border-2 border-white text-white font-semibold px-6 py-3 rounded-xl hover:bg-white hover:text-red-700 transition-colors">
+                  <Link href="/track" className="bg-yellow-400 hover:bg-yellow-300 text-red-900 font-bold px-6 py-3 rounded-xl transition-colors shadow-lg">
                     Track Shipment
                   </Link>
                 </div>
