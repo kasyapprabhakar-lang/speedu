@@ -248,20 +248,29 @@ export default function HomePage() {
         </section>
 
         {/* Features */}
-        <section className="py-16 bg-red-700 text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative py-16 bg-red-700 text-white overflow-hidden">
+          {/* Decorative trucks & boxes in background */}
+          <div className="absolute inset-0 pointer-events-none select-none flex items-center justify-around opacity-10 text-white">
+            <span className="text-[160px] leading-none -rotate-12">🚚</span>
+            <span className="text-[120px] leading-none">📦</span>
+            <span className="text-[140px] leading-none rotate-6">🚐</span>
+            <span className="text-[110px] leading-none -rotate-6">📫</span>
+            <span className="text-[150px] leading-none rotate-12">🚛</span>
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-extrabold">Why Choose SpeedU?</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { icon: <MapPin className="h-6 w-6" />, title: 'Real-time Tracking', desc: 'Track every step of your delivery live.' },
-                { icon: <Clock className="h-6 w-6" />, title: 'Same Day Delivery', desc: 'Book before 6pm for same day delivery.' },
-                { icon: <Shield className="h-6 w-6" />, title: 'Secure & Safe', desc: 'Every package handled with care.' },
-                { icon: <Star className="h-6 w-6" />, title: '24/7 Support', desc: 'Our team is always ready to help.' },
+                { emoji: '📍', title: 'Real-time Tracking', desc: 'Track every step of your delivery live.' },
+                { emoji: '⚡', title: 'Same Day Delivery', desc: 'Book before 6pm for same day delivery.' },
+                { emoji: '🔒', title: 'Secure & Safe', desc: 'Every package handled with care.' },
+                { emoji: '🎧', title: '24/7 Support', desc: 'Our team is always ready to help.' },
               ].map((f) => (
-                <div key={f.title} className="bg-red-600 bg-opacity-50 rounded-xl p-5 text-center">
-                  <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mx-auto mb-3">{f.icon}</div>
+                <div key={f.title} className="bg-red-600 bg-opacity-60 backdrop-blur-sm rounded-xl p-5 text-center border border-white border-opacity-10">
+                  <div className="text-4xl mb-3">{f.emoji}</div>
                   <h3 className="font-bold mb-1">{f.title}</h3>
                   <p className="text-red-100 text-sm">{f.desc}</p>
                 </div>
