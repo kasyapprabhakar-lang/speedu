@@ -38,7 +38,7 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-3">Contact</h3>
             <ul className="space-y-2 text-sm">
-              <li className="flex items-center gap-2"><Phone className="h-4 w-4 text-red-400" /> +91 98765 43210</li>
+              <li className="flex items-center gap-2"><Phone className="h-4 w-4 text-red-400" /> +91 97181 11634</li>
               <li className="flex items-center gap-2"><Mail className="h-4 w-4 text-red-400" /> support@speedu.in</li>
               <li className="flex items-start gap-2"><MapPin className="h-4 w-4 text-red-400 mt-0.5" /> India</li>
             </ul>
