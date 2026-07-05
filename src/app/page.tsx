@@ -58,114 +58,105 @@ export default function HomePage() {
     <>
       <Navbar />
       <main>
-        {/* Hero Section */}
-        <section className="relative bg-red-900 text-white overflow-hidden min-h-[580px] flex items-center">
+        {/* ── Hero: full-width background, tagline only ── */}
+        <section className="relative bg-red-900 text-white overflow-hidden h-[420px] lg:h-[500px] flex items-end pb-16">
 
-          {/* ── Decorative diagonal panels (Porter-style) ── */}
+          {/* Decorative diagonal panels */}
           <div className="absolute inset-0 pointer-events-none select-none">
-            {/* base gradient */}
             <div className="absolute inset-0 bg-gradient-to-r from-red-950 to-red-800" />
 
             {/* Panel 1 – bike */}
             <div
-              className="absolute top-0 bottom-0 right-[36%] w-[30%] flex items-center justify-center overflow-hidden"
-              style={{ clipPath: 'polygon(12% 0, 100% 0, 88% 100%, 0% 100%)', background: 'rgba(220,30,30,0.55)' }}
+              className="absolute top-0 bottom-0 left-[30%] w-[34%] flex items-center justify-center overflow-hidden"
+              style={{ clipPath: 'polygon(10% 0, 100% 0, 90% 100%, 0% 100%)', background: 'rgba(220,30,30,0.55)' }}
             >
-              <span className="text-[190px] leading-none opacity-80 transform -rotate-6 translate-x-4 drop-shadow-2xl">🏍️</span>
+              <span className="text-[220px] leading-none opacity-80 transform -rotate-6 drop-shadow-2xl">🏍️</span>
             </div>
 
             {/* Panel 2 – mini truck */}
             <div
-              className="absolute top-0 bottom-0 right-[10%] w-[30%] flex items-center justify-center overflow-hidden"
-              style={{ clipPath: 'polygon(12% 0, 100% 0, 88% 100%, 0% 100%)', background: 'rgba(200,20,20,0.50)' }}
+              className="absolute top-0 bottom-0 left-[58%] w-[34%] flex items-center justify-center overflow-hidden"
+              style={{ clipPath: 'polygon(10% 0, 100% 0, 90% 100%, 0% 100%)', background: 'rgba(200,20,20,0.50)' }}
             >
-              <span className="text-[175px] leading-none opacity-80 translate-x-2 drop-shadow-2xl">🚐</span>
+              <span className="text-[200px] leading-none opacity-80 drop-shadow-2xl">🚐</span>
             </div>
 
             {/* Panel 3 – movers */}
             <div
-              className="absolute top-0 bottom-0 right-[-4%] w-[24%] flex items-center justify-center overflow-hidden"
-              style={{ clipPath: 'polygon(14% 0, 100% 0, 100% 100%, 0% 100%)', background: 'rgba(180,15,15,0.45)' }}
+              className="absolute top-0 bottom-0 right-0 w-[20%] flex items-center justify-center overflow-hidden"
+              style={{ clipPath: 'polygon(12% 0, 100% 0, 100% 100%, 0% 100%)', background: 'rgba(180,15,15,0.45)' }}
             >
-              <span className="text-[155px] leading-none opacity-80 rotate-6 drop-shadow-2xl">🏠</span>
+              <span className="text-[160px] leading-none opacity-80 rotate-6 drop-shadow-2xl">🏠</span>
             </div>
 
-            {/* Left fade so text stays readable */}
-            <div className="absolute inset-0 bg-gradient-to-r from-red-950 via-red-950/70 to-transparent" />
+            {/* Left fade — keeps text readable */}
+            <div className="absolute inset-0 bg-gradient-to-r from-red-950 via-red-950/60 to-transparent" />
+            {/* Bottom fade — blends into booking widget */}
+            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-red-950/80 to-transparent" />
 
-            {/* Subtle dot pattern */}
-            <div
-              className="absolute inset-0 opacity-[0.06]"
-              style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-            />
+            {/* Dot pattern */}
+            <div className="absolute inset-0 opacity-[0.06]"
+              style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
           </div>
 
-          {/* ── Content ── */}
-          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 bg-yellow-400 text-red-900 rounded-full px-4 py-1.5 text-sm font-bold mb-6">
-                  <span className="h-2 w-2 bg-red-700 rounded-full animate-pulse"></span>
-                  Same Day Delivery Within City
-                </div>
-                <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight mb-4 drop-shadow-lg">
-                  SpeedU matlab{' '}
-                  <span className="text-yellow-300">Speed &amp; Secure!</span>
-                </h1>
-                <p className="text-red-100 text-lg mb-8 leading-relaxed max-w-md">
-                  Fast and reliable within-city courier pickup and delivery. Book in 2 minutes, track in real-time.
-                </p>
-                <div className="flex gap-3">
-                  <Link href="/track" className="border-2 border-white text-white font-semibold px-6 py-3 rounded-xl hover:bg-white hover:text-red-700 transition-colors">
-                    Track Shipment
-                  </Link>
-                </div>
+          {/* Tagline — bottom-left like Porter */}
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="inline-flex items-center gap-2 bg-yellow-400 text-red-900 rounded-full px-4 py-1.5 text-sm font-bold mb-4">
+              <span className="h-2 w-2 bg-red-700 rounded-full animate-pulse"></span>
+              Same Day Delivery Within City
+            </div>
+            <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight drop-shadow-lg">
+              SpeedU matlab{' '}
+              <span className="text-yellow-300">Speed &amp; Secure!</span>
+            </h1>
+          </div>
+        </section>
+
+        {/* ── Booking Widget — floats below hero ── */}
+        <section className="bg-gray-50 py-8">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-10">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 text-gray-900">
+              {/* City selector row */}
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-gray-900">Book a Delivery</h2>
+                <CitySelector selected={city} onSelect={setCity} variant="light" />
               </div>
 
-              {/* Booking Widget */}
-              <div className="bg-white rounded-2xl shadow-2xl p-6 text-gray-900">
-                {/* City selector */}
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-lg font-bold text-gray-900">Book a Delivery</h2>
-                  <CitySelector selected={city} onSelect={setCity} variant="light" />
-                </div>
-
-                {/* Vehicle type */}
-                <p className="text-sm font-medium text-gray-500 mb-3">Select service</p>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {VEHICLE_TYPES.map((v) => (
-                    <button
-                      key={v.id}
-                      onClick={() => setVehicle(v.id)}
-                      className={`p-3 rounded-xl border-2 text-left transition-colors ${vehicle === v.id ? 'border-red-700 bg-red-50' : 'border-gray-100 hover:border-gray-200'}`}
-                    >
-                      <span className="text-2xl block mb-1.5">{v.emoji}</span>
-                      <p className="font-bold text-gray-900 text-xs leading-tight">{v.label}</p>
-                      <p className="text-xs text-gray-400 mt-0.5 leading-tight">{v.desc}</p>
-                      <p className={`text-xs font-semibold mt-1 ${v.isQuote ? 'text-blue-600' : 'text-red-600'}`}>{v.priceRange}</p>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Selected vehicle info */}
-                {VEHICLE_TYPES.filter(v => v.id === vehicle).map(v => (
-                  <div key={v.id} className="bg-gray-50 rounded-xl p-3 mb-4 flex justify-between text-xs text-gray-500">
-                    <span>⚖️ {v.weight}</span>
-                    <span>⏱️ {v.eta}</span>
-                    <span>📍 {city}</span>
-                  </div>
+              {/* Service cards */}
+              <p className="text-sm font-medium text-gray-500 mb-3">Select service</p>
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {VEHICLE_TYPES.map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => setVehicle(v.id)}
+                    className={`p-4 rounded-xl border-2 text-left transition-colors ${vehicle === v.id ? 'border-red-700 bg-red-50' : 'border-gray-100 hover:border-gray-200'}`}
+                  >
+                    <span className="text-3xl block mb-2">{v.emoji}</span>
+                    <p className="font-bold text-gray-900 text-sm leading-tight">{v.label}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 leading-tight">{v.desc}</p>
+                    <p className={`text-xs font-semibold mt-1.5 ${v.isQuote ? 'text-blue-600' : 'text-red-600'}`}>{v.priceRange}</p>
+                  </button>
                 ))}
-
-                <button
-                  onClick={handleBook}
-                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl transition-colors text-lg flex items-center justify-center gap-2"
-                >
-                  {vehicle === 'packers-movers' ? 'Get a Free Quote →' : 'Get Estimate & Book →'}
-                </button>
-                <p className="text-xs text-gray-400 text-center mt-2">
-                  {vehicle === 'packers-movers' ? 'We will call you within 30 minutes' : 'Takes ~2 minutes'}
-                </p>
               </div>
+
+              {/* Info strip */}
+              {VEHICLE_TYPES.filter(v => v.id === vehicle).map(v => (
+                <div key={v.id} className="bg-gray-50 rounded-xl p-3 mb-4 flex justify-between text-xs text-gray-500">
+                  <span>⚖️ {v.weight}</span>
+                  <span>⏱️ {v.eta}</span>
+                  <span>📍 {city}</span>
+                </div>
+              ))}
+
+              <button
+                onClick={handleBook}
+                className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl transition-colors text-lg"
+              >
+                {vehicle === 'packers-movers' ? 'Get a Free Quote →' : 'Get Estimate & Book →'}
+              </button>
+              <p className="text-xs text-gray-400 text-center mt-2">
+                {vehicle === 'packers-movers' ? 'We will call you within 30 minutes' : 'Takes ~2 minutes'}
+              </p>
             </div>
           </div>
         </section>
