@@ -123,3 +123,25 @@ $$ language plpgsql;
 create trigger bookings_updated_at
   before update on public.bookings
   for each row execute procedure public.handle_updated_at();
+
+-- Run these additional queries in Supabase SQL Editor
+
+-- Add COD and driver fields to bookings table
+alter table public.bookings
+  add column if not exists payment_method text default 'online' check (payment_method in ('online', 'cod')),
+  add column if not exists cod_charge integer default 0,
+  add column if not exists driver_name text,
+  add column if not exists driver_phone text;
+
+-- Admin whitelist table
+create table if not exists public.admin_users (
+  id uuid default uuid_generate_v4() primary key,
+  identifier text unique not null, -- email or phone
+  name text,
+  created_at timestamptz default now()
+);
+
+alter table public.admin_users enable row level security;
+
+create policy "Admins can read admin_users" on public.admin_users
+  for select using (true);

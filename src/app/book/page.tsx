@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { createClient } from '@/lib/supabase/client'
 import { generateTrackingId, formatCurrency } from '@/lib/utils'
-import { Package, MapPin, User, Phone, ChevronRight } from 'lucide-react'
+import { Package, MapPin, User, Phone, ChevronRight, CreditCard, Banknote } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const PACKAGE_TYPES = [
@@ -23,6 +23,8 @@ const INDIAN_STATES = [
   'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
   'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu and Kashmir', 'Ladakh',
 ]
+
+const COD_CHARGE = 20
 
 interface FormData {
   senderName: string
@@ -52,6 +54,7 @@ export default function BookPage() {
   const router = useRouter()
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [form, setForm] = useState<FormData>(initialForm)
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod')
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -72,93 +75,59 @@ export default function BookPage() {
 
   const selectedPkg = PACKAGE_TYPES.find((p) => p.value === form.packageType) || PACKAGE_TYPES[1]
   const weight = parseFloat(form.weightKg) || 0
-  const estimatedAmount = Math.round(selectedPkg.basePrice + weight * selectedPkg.perKg)
+  const baseAmount = Math.round(selectedPkg.basePrice + weight * selectedPkg.perKg)
+  const codCharge = paymentMethod === 'cod' ? COD_CHARGE : 0
+  const totalAmount = Math.round((baseAmount + codCharge) * 1.18)
 
   const update = (key: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
   }
 
-  const handlePayment = async () => {
-    if (!user) {
-      router.push('/auth/login?next=/book')
-      return
-    }
-
+  const saveCodBooking = async () => {
+    if (!user) { router.push('/auth/login?next=/book'); return }
     setLoading(true)
     setError('')
-
     try {
-      // Create Razorpay order via API
-      const orderRes = await fetch('/api/payment/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: estimatedAmount }),
-      })
-      const orderData = await orderRes.json()
-      if (!orderRes.ok) throw new Error(orderData.error || 'Failed to create order')
-
-      // Load Razorpay script
-      const script = document.createElement('script')
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-      document.body.appendChild(script)
-
-      await new Promise<void>((resolve) => { script.onload = () => resolve() })
-
       const trackingId = generateTrackingId()
-
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: orderData.amount,
-        currency: 'INR',
-        name: 'SpeedU Courier',
-        description: `Booking - ${trackingId}`,
-        order_id: orderData.id,
-        prefill: {
-          name: form.senderName,
-          contact: form.senderPhone,
-          email: user.email || '',
-        },
-        theme: { color: '#c8102e' },
-        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string }) => {
-          // Save booking to database
-          const { error: dbError } = await supabase.from('bookings').insert({
-            tracking_id: trackingId,
-            user_id: user.id,
-            sender_name: form.senderName,
-            sender_phone: form.senderPhone,
-            sender_address: form.senderAddress,
-            sender_city: form.senderCity,
-            sender_pincode: form.senderPincode,
-            sender_state: form.senderState,
-            receiver_name: form.receiverName,
-            receiver_phone: form.receiverPhone,
-            receiver_address: form.receiverAddress,
-            receiver_city: form.receiverCity,
-            receiver_pincode: form.receiverPincode,
-            receiver_state: form.receiverState,
-            package_type: form.packageType,
-            weight_kg: weight,
-            description: form.description,
-            amount: estimatedAmount * 100, // paise
-            payment_status: 'paid',
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            status: 'confirmed',
-          })
-
-          if (dbError) throw new Error(dbError.message)
-
-          router.push(`/booking-confirmed?id=${trackingId}`)
-        },
-      }
-
-      // @ts-expect-error: Razorpay is loaded via script tag
-      const rzp = new window.Razorpay(options)
-      rzp.open()
+      const { error: dbError } = await supabase.from('bookings').insert({
+        tracking_id: trackingId,
+        user_id: user.id,
+        sender_name: form.senderName,
+        sender_phone: form.senderPhone,
+        sender_address: form.senderAddress,
+        sender_city: form.senderCity,
+        sender_pincode: form.senderPincode,
+        sender_state: form.senderState,
+        receiver_name: form.receiverName,
+        receiver_phone: form.receiverPhone,
+        receiver_address: form.receiverAddress,
+        receiver_city: form.receiverCity,
+        receiver_pincode: form.receiverPincode,
+        receiver_state: form.receiverState,
+        package_type: form.packageType,
+        weight_kg: weight,
+        description: form.description,
+        amount: totalAmount * 100,
+        cod_charge: COD_CHARGE * 100,
+        payment_method: 'cod',
+        payment_status: 'pending',
+        status: 'pending',
+      })
+      if (dbError) throw new Error(dbError.message)
+      router.push(`/booking-confirmed?id=${trackingId}&method=cod`)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
+      setError(err instanceof Error ? err.message : 'Failed to place order. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleProceed = async () => {
+    if (!user) { router.push('/auth/login?next=/book'); return }
+    if (paymentMethod === 'cod') {
+      await saveCodBooking()
+    } else {
+      setError('Online payment coming soon. Please use Cash on Delivery for now.')
     }
   }
 
@@ -167,7 +136,6 @@ export default function BookPage() {
       <Navbar />
       <main className="bg-gray-50 min-h-screen py-10">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-extrabold text-gray-900">Book a Courier</h1>
             <p className="text-gray-500 mt-2">Fill in the details below to schedule a pickup</p>
@@ -239,11 +207,9 @@ export default function BookPage() {
                 <button
                   onClick={() => {
                     if (!form.senderName || !form.senderPhone || !form.senderAddress || !form.senderCity || !form.senderPincode || !form.senderState) {
-                      setError('Please fill all sender details')
-                      return
+                      setError('Please fill all sender details'); return
                     }
-                    setError('')
-                    setStep(2)
+                    setError(''); setStep(2)
                   }}
                   className="mt-6 w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
@@ -292,17 +258,13 @@ export default function BookPage() {
                   </div>
                 </div>
                 <div className="flex gap-3 mt-6">
-                  <button onClick={() => setStep(1)} className="flex-1 border-2 border-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-colors">
-                    Back
-                  </button>
+                  <button onClick={() => setStep(1)} className="flex-1 border-2 border-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-colors">Back</button>
                   <button
                     onClick={() => {
                       if (!form.receiverName || !form.receiverPhone || !form.receiverAddress || !form.receiverCity || !form.receiverPincode || !form.receiverState) {
-                        setError('Please fill all receiver details')
-                        return
+                        setError('Please fill all receiver details'); return
                       }
-                      setError('')
-                      setStep(3)
+                      setError(''); setStep(3)
                     }}
                     className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
@@ -317,10 +279,11 @@ export default function BookPage() {
               <div>
                 <div className="flex items-center gap-2 mb-6">
                   <Package className="h-5 w-5 text-red-700" />
-                  <h2 className="text-xl font-bold text-gray-900">Package Details & Payment</h2>
+                  <h2 className="text-xl font-bold text-gray-900">Package &amp; Payment</h2>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-5">
+                  {/* Package type */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Package Type *</label>
                     <div className="grid grid-cols-2 gap-3">
@@ -336,14 +299,46 @@ export default function BookPage() {
                     </div>
                   </div>
 
+                  {/* Weight */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Weight (kg) *</label>
                     <input type="number" placeholder={`Max ${selectedPkg.maxKg} kg`} value={form.weightKg} onChange={update('weightKg')} min="0.1" max={selectedPkg.maxKg} step="0.1" className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
                   </div>
 
+                  {/* Description */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Package Description (optional)</label>
-                    <textarea placeholder="e.g. Books, clothes, mobile phone..." value={form.description} onChange={update('description')} rows={3} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition resize-none" />
+                    <textarea placeholder="e.g. Books, clothes, mobile phone..." value={form.description} onChange={update('description')} rows={2} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition resize-none" />
+                  </div>
+
+                  {/* Payment method */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method *</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${paymentMethod === 'cod' ? 'border-red-700 bg-red-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                        <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="accent-red-700" />
+                        <div>
+                          <div className="flex items-center gap-1.5 font-semibold text-sm text-gray-900">
+                            <Banknote className="h-4 w-4 text-green-600" /> Cash on Delivery
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">+₹{COD_CHARGE} handling fee</div>
+                        </div>
+                      </label>
+                      <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${paymentMethod === 'online' ? 'border-red-700 bg-red-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                        <input type="radio" name="payment" value="online" checked={paymentMethod === 'online'} onChange={() => setPaymentMethod('online')} className="accent-red-700" />
+                        <div>
+                          <div className="flex items-center gap-1.5 font-semibold text-sm text-gray-900">
+                            <CreditCard className="h-4 w-4 text-blue-600" /> Pay Online
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">UPI, Cards, Net Banking</div>
+                        </div>
+                      </label>
+                    </div>
+                    {paymentMethod === 'online' && (
+                      <p className="text-xs text-orange-600 mt-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+                        Online payment coming soon. Please use Cash on Delivery for now.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -356,27 +351,31 @@ export default function BookPage() {
                       <span>₹{selectedPkg.basePrice}</span>
                     </div>
                     <div className="flex justify-between text-gray-600">
-                      <span>Weight charge ({weight} kg × ₹{selectedPkg.perKg})</span>
+                      <span>Weight ({weight} kg × ₹{selectedPkg.perKg})</span>
                       <span>₹{Math.round(weight * selectedPkg.perKg)}</span>
                     </div>
+                    {paymentMethod === 'cod' && (
+                      <div className="flex justify-between text-gray-600">
+                        <span>COD handling fee</span>
+                        <span>₹{COD_CHARGE}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-gray-600">
                       <span>GST (18%)</span>
-                      <span>₹{Math.round(estimatedAmount * 0.18)}</span>
+                      <span>₹{Math.round((baseAmount + codCharge) * 0.18)}</span>
                     </div>
                     <hr className="border-gray-300" />
                     <div className="flex justify-between font-bold text-gray-900 text-base">
-                      <span>Total</span>
-                      <span className="text-red-700">{formatCurrency(Math.round(estimatedAmount * 1.18))}</span>
+                      <span>Total {paymentMethod === 'cod' ? '(Pay on delivery)' : ''}</span>
+                      <span className="text-red-700">{formatCurrency(totalAmount)}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Route Summary */}
-                <div className="mt-4 bg-blue-50 rounded-xl p-4 border border-blue-100 text-sm">
-                  <div className="flex justify-between text-gray-700">
-                    <span><strong>From:</strong> {form.senderCity}, {form.senderState}</span>
-                    <span><strong>To:</strong> {form.receiverCity}, {form.receiverState}</span>
-                  </div>
+                {/* Route */}
+                <div className="mt-3 bg-blue-50 rounded-xl p-4 border border-blue-100 text-sm flex justify-between text-gray-700">
+                  <span><strong>From:</strong> {form.senderCity}, {form.senderState}</span>
+                  <span><strong>To:</strong> {form.receiverCity}, {form.receiverState}</span>
                 </div>
 
                 {!user && (
@@ -386,19 +385,18 @@ export default function BookPage() {
                 )}
 
                 <div className="flex gap-3 mt-6">
-                  <button onClick={() => setStep(2)} className="flex-1 border-2 border-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-colors">
-                    Back
-                  </button>
+                  <button onClick={() => setStep(2)} className="flex-1 border-2 border-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-colors">Back</button>
                   <button
-                    onClick={handlePayment}
-                    disabled={loading || !form.weightKg || parseFloat(form.weightKg) <= 0}
+                    onClick={handleProceed}
+                    disabled={loading || !form.weightKg || parseFloat(form.weightKg) <= 0 || paymentMethod === 'online'}
                     className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    <Phone className="h-4 w-4" />
-                    {loading ? 'Processing...' : `Pay ${formatCurrency(Math.round(estimatedAmount * 1.18))}`}
+                    {loading ? 'Placing Order...' : paymentMethod === 'cod' ? `Confirm COD Order` : 'Pay Online'}
                   </button>
                 </div>
-                <p className="text-xs text-gray-400 text-center mt-3">Secured by Razorpay · UPI, Cards, Net Banking accepted</p>
+                <p className="text-xs text-gray-400 text-center mt-3">
+                  {paymentMethod === 'cod' ? 'Pay cash to the delivery person at pickup' : 'Secured payment via Razorpay'}
+                </p>
               </div>
             )}
           </div>
