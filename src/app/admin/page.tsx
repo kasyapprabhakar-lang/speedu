@@ -337,7 +337,7 @@ export default function AdminPage() {
                     )}
 
                     {/* Status update buttons */}
-                    {nextStatuses.length > 0 && b.status !== 'pending' && (
+                    {nextStatuses.length > 0 && (
                       <div>
                         <h4 className="font-semibold text-gray-700 text-sm mb-2">Update Status</h4>
                         <div className="flex flex-wrap gap-2">
