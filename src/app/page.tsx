@@ -69,7 +69,7 @@ export default function HomePage() {
                 </div>
                 <h1 className="text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
                   SpeedU matlab{' '}
-                  <span className="text-yellow-300">sabse tej!</span>
+                  <span className="text-yellow-300">Speed &amp; Secure!</span>
                 </h1>
                 <p className="text-red-100 text-lg mb-8 leading-relaxed">
                   Fast and reliable within-city courier pickup and delivery. Book in 2 minutes, track in real-time.
