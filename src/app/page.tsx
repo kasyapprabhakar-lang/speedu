@@ -52,8 +52,8 @@ export default function HomePage() {
                   Same Day Delivery Within City
                 </div>
                 <h1 className="text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
-                  Delivery Aapki,{' '}
-                  <span className="text-yellow-300">SpeedU Hamara</span>
+                  SpeedU matlab{' '}
+                  <span className="text-yellow-300">sabse tej!</span>
                 </h1>
                 <p className="text-red-100 text-lg mb-8 leading-relaxed">
                   Fast and reliable within-city courier pickup and delivery. Book in 2 minutes, track in real-time.
@@ -70,9 +70,7 @@ export default function HomePage() {
                 {/* City selector */}
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-lg font-bold text-gray-900">Book a Delivery</h2>
-                  <div className="flex items-center gap-2 bg-red-700 rounded-xl px-3 py-2">
-                    <CitySelector selected={city} onSelect={setCity} />
-                  </div>
+                  <CitySelector selected={city} onSelect={setCity} variant="light" />
                 </div>
 
                 {/* Vehicle type */}

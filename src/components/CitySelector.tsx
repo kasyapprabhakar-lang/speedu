@@ -14,18 +14,20 @@ const AVAILABLE_CITIES = [
 interface CitySelectorProps {
   selected: string
   onSelect: (city: string) => void
+  variant?: 'dark' | 'light'
 }
 
-export default function CitySelector({ selected, onSelect }: CitySelectorProps) {
+export default function CitySelector({ selected, onSelect, variant = 'dark' }: CitySelectorProps) {
   const [open, setOpen] = useState(false)
+
+  const btnClass = variant === 'light'
+    ? 'flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-xl px-4 py-2.5 font-semibold transition-colors border border-gray-200'
+    : 'flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-xl px-4 py-2.5 font-semibold transition-colors'
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-xl px-4 py-2.5 font-semibold transition-colors"
-      >
-        <MapPin className="h-4 w-4 text-yellow-300" />
+      <button onClick={() => setOpen(true)} className={btnClass}>
+        <MapPin className={`h-4 w-4 ${variant === 'light' ? 'text-red-700' : 'text-yellow-300'}`} />
         <span>City: <strong>{selected}</strong></span>
         <ChevronDown className="h-4 w-4" />
       </button>
