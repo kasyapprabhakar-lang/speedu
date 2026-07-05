@@ -17,6 +17,7 @@ const VEHICLE_TYPES = [
     weight: 'Up to 5 kg',
     eta: 'Same day',
     priceRange: '₹50 – ₹150',
+    isQuote: false,
   },
   {
     id: 'mini-truck',
@@ -26,6 +27,17 @@ const VEHICLE_TYPES = [
     weight: 'Up to 50 kg',
     eta: 'Same day',
     priceRange: '₹200 – ₹600',
+    isQuote: false,
+  },
+  {
+    id: 'packers-movers',
+    label: 'Packers & Movers',
+    emoji: '🏠',
+    desc: 'Home & office relocation',
+    weight: 'Any size',
+    eta: 'Scheduled',
+    priceRange: 'Get a Quote',
+    isQuote: true,
   },
 ]
 
@@ -35,7 +47,11 @@ export default function HomePage() {
   const [vehicle, setVehicle] = useState('two-wheeler')
 
   const handleBook = () => {
-    router.push(`/book?city=${encodeURIComponent(city)}&vehicle=${vehicle}`)
+    if (vehicle === 'packers-movers') {
+      router.push(`/packers-movers?city=${encodeURIComponent(city)}`)
+    } else {
+      router.push(`/book?city=${encodeURIComponent(city)}&vehicle=${vehicle}`)
+    }
   }
 
   return (
@@ -74,18 +90,18 @@ export default function HomePage() {
                 </div>
 
                 {/* Vehicle type */}
-                <p className="text-sm font-medium text-gray-500 mb-3">Select vehicle type</p>
-                <div className="grid grid-cols-2 gap-3 mb-5">
+                <p className="text-sm font-medium text-gray-500 mb-3">Select service</p>
+                <div className="grid grid-cols-3 gap-2 mb-4">
                   {VEHICLE_TYPES.map((v) => (
                     <button
                       key={v.id}
                       onClick={() => setVehicle(v.id)}
-                      className={`p-4 rounded-xl border-2 text-left transition-colors ${vehicle === v.id ? 'border-red-700 bg-red-50' : 'border-gray-100 hover:border-gray-200'}`}
+                      className={`p-3 rounded-xl border-2 text-left transition-colors ${vehicle === v.id ? 'border-red-700 bg-red-50' : 'border-gray-100 hover:border-gray-200'}`}
                     >
-                      <span className="text-3xl block mb-2">{v.emoji}</span>
-                      <p className="font-bold text-gray-900 text-sm">{v.label}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{v.desc}</p>
-                      <p className="text-xs font-semibold text-red-600 mt-1">{v.priceRange}</p>
+                      <span className="text-2xl block mb-1.5">{v.emoji}</span>
+                      <p className="font-bold text-gray-900 text-xs leading-tight">{v.label}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 leading-tight">{v.desc}</p>
+                      <p className={`text-xs font-semibold mt-1 ${v.isQuote ? 'text-blue-600' : 'text-red-600'}`}>{v.priceRange}</p>
                     </button>
                   ))}
                 </div>
@@ -103,9 +119,11 @@ export default function HomePage() {
                   onClick={handleBook}
                   className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl transition-colors text-lg flex items-center justify-center gap-2"
                 >
-                  Get Estimate &amp; Book →
+                  {vehicle === 'packers-movers' ? 'Get a Free Quote →' : 'Get Estimate & Book →'}
                 </button>
-                <p className="text-xs text-gray-400 text-center mt-2">Takes ~2 minutes</p>
+                <p className="text-xs text-gray-400 text-center mt-2">
+                  {vehicle === 'packers-movers' ? 'We will call you within 30 minutes' : 'Takes ~2 minutes'}
+                </p>
               </div>
             </div>
           </div>

@@ -89,16 +89,48 @@ Reply with driver name to assign`
   return encodeURIComponent(msg)
 }
 
+interface PMQuote {
+  id: string
+  created_at: string
+  city: string
+  name: string
+  phone: string
+  from_address: string
+  from_pincode: string
+  from_floor: string
+  from_lift: boolean
+  to_address: string
+  to_pincode: string
+  to_floor: string
+  to_lift: boolean
+  move_date: string
+  time_preference: string
+  home_type: string
+  items: string[]
+  notes: string
+  status: string
+}
+
+const PM_STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  new:       { label: 'New',       color: 'bg-yellow-100 text-yellow-800' },
+  called:    { label: 'Called',    color: 'bg-blue-100 text-blue-800' },
+  quoted:    { label: 'Quoted',    color: 'bg-purple-100 text-purple-800' },
+  confirmed: { label: 'Confirmed', color: 'bg-green-100 text-green-800' },
+  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800' },
+}
+
 export default function AdminPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [authorized, setAuthorized] = useState(false)
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [pmQuotes, setPmQuotes] = useState<PMQuote[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [driverInputs, setDriverInputs] = useState<Record<string, { name: string; phone: string }>>({})
   const [statusFilter, setStatusFilter] = useState('pending')
   const [updating, setUpdating] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'deliveries' | 'pm'>('deliveries')
   const supabase = createClient()
 
   const loadBookings = useCallback(async () => {
@@ -107,6 +139,11 @@ export default function AdminPage() {
     const { data } = await query
     setBookings(data || [])
   }, [statusFilter])
+
+  const loadPMQuotes = useCallback(async () => {
+    const { data } = await supabase.from('pm_quotes').select('*').order('created_at', { ascending: false })
+    setPmQuotes(data || [])
+  }, [])
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -122,8 +159,8 @@ export default function AdminPage() {
   }, [])
 
   useEffect(() => {
-    if (authorized) loadBookings()
-  }, [authorized, loadBookings])
+    if (authorized) { loadBookings(); loadPMQuotes() }
+  }, [authorized, loadBookings, loadPMQuotes])
 
   const updateStatus = async (bookingId: string, newStatus: string, driverName?: string, driverPhone?: string) => {
     setUpdating(bookingId)
@@ -170,6 +207,7 @@ export default function AdminPage() {
   )
 
   const pendingCount = bookings.filter(b => b.status === 'pending').length
+  const newPMCount = pmQuotes.filter(q => q.status === 'new').length
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -183,11 +221,118 @@ export default function AdminPage() {
               {pendingCount} pending
             </span>
           )}
+          {newPMCount > 0 && (
+            <span className="bg-blue-400 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              {newPMCount} P&amp;M
+            </span>
+          )}
         </div>
         <span className="text-red-200 text-sm">{user?.email || user?.phone}</span>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-6">
+        {/* Main tab switcher */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveTab('deliveries')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${activeTab === 'deliveries' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            🚚 Deliveries {pendingCount > 0 && `(${pendingCount})`}
+          </button>
+          <button
+            onClick={() => setActiveTab('pm')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${activeTab === 'pm' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+          >
+            🏠 P&amp;M Quotes {newPMCount > 0 && `(${newPMCount})`}
+          </button>
+        </div>
+
+        {/* P&M Quotes Panel */}
+        {activeTab === 'pm' && (
+          <div className="space-y-4">
+            {pmQuotes.length === 0 && (
+              <div className="bg-white rounded-2xl p-12 text-center text-gray-400">
+                <span className="text-5xl block mb-3">🏠</span>
+                <p>No P&amp;M quote requests yet</p>
+              </div>
+            )}
+            {pmQuotes.map((q) => {
+              const st = PM_STATUS_LABELS[q.status] || PM_STATUS_LABELS['new']
+              return (
+                <div key={q.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="font-bold text-gray-900">{q.name}</div>
+                      <div className="text-sm text-gray-500">+91 {q.phone} · {q.city} · {q.home_type}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">Move date: {new Date(q.move_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · {q.time_preference}</div>
+                    </div>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${st.color}`}>{st.label}</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs font-medium text-gray-400 mb-1">FROM</p>
+                      <p className="text-gray-800">{q.from_address}</p>
+                      <p className="text-xs text-gray-500">{q.from_pincode} · Floor: {q.from_floor || '—'} · Lift: {q.from_lift ? 'Yes' : 'No'}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs font-medium text-gray-400 mb-1">TO</p>
+                      <p className="text-gray-800">{q.to_address}</p>
+                      <p className="text-xs text-gray-500">{q.to_pincode} · Floor: {q.to_floor || '—'} · Lift: {q.to_lift ? 'Yes' : 'No'}</p>
+                    </div>
+                  </div>
+
+                  {q.items?.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-400 mb-1">Items:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {q.items.map((item: string) => (
+                          <span key={item} className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{item}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {q.notes && (
+                    <p className="text-xs text-gray-500 bg-yellow-50 rounded-lg px-3 py-2 mb-3">📝 {q.notes}</p>
+                  )}
+
+                  <div className="flex gap-2 flex-wrap">
+                    <a
+                      href={`tel:+91${q.phone}`}
+                      className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors"
+                    >
+                      <Phone className="h-3.5 w-3.5" /> Call Customer
+                    </a>
+                    <a
+                      href={`https://wa.me/91${q.phone}?text=${encodeURIComponent(`Hi ${q.name}! This is SpeedU team. We received your Packers & Movers quote request for ${q.move_date}. Let us share the best price for your move in ${q.city}.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors"
+                    >
+                      WhatsApp
+                    </a>
+                    {['called', 'quoted', 'confirmed', 'cancelled'].map((s) => (
+                      <button
+                        key={s}
+                        onClick={async () => {
+                          await supabase.from('pm_quotes').update({ status: s }).eq('id', q.id)
+                          loadPMQuotes()
+                        }}
+                        className={`text-xs font-bold px-3 py-2 rounded-lg border transition-colors ${q.status === s ? 'bg-gray-200 text-gray-500' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                      >
+                        → {PM_STATUS_LABELS[s].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Deliveries Panel */}
+        {activeTab === 'deliveries' && <>
         {/* Status filter tabs */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6">
           {[
@@ -400,6 +545,7 @@ export default function AdminPage() {
             )
           })}
         </div>
+        </>}
       </div>
     </div>
   )
