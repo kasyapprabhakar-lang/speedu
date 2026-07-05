@@ -1,63 +1,113 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { Package, MapPin, Clock, Shield, Star, CheckCircle, Truck, ArrowRight } from 'lucide-react'
+import CitySelector from '@/components/CitySelector'
+import { MapPin, Clock, Shield, Star, CheckCircle, Truck, ArrowRight } from 'lucide-react'
+
+const VEHICLE_TYPES = [
+  {
+    id: 'two-wheeler',
+    label: '2-Wheeler',
+    emoji: '🏍️',
+    desc: 'Documents & small parcels',
+    weight: 'Up to 5 kg',
+    eta: 'Same day',
+    priceRange: '₹50 – ₹150',
+  },
+  {
+    id: 'mini-truck',
+    label: 'Mini Truck',
+    emoji: '🚐',
+    desc: 'Medium & heavy packages',
+    weight: 'Up to 50 kg',
+    eta: 'Same day',
+    priceRange: '₹200 – ₹600',
+  },
+]
 
 export default function HomePage() {
+  const router = useRouter()
+  const [city, setCity] = useState('Bangalore')
+  const [vehicle, setVehicle] = useState('two-wheeler')
+
+  const handleBook = () => {
+    router.push(`/book?city=${encodeURIComponent(city)}&vehicle=${vehicle}`)
+  }
+
   return (
     <>
       <Navbar />
       <main>
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-red-700 via-red-800 to-red-900 text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <div className="inline-flex items-center gap-2 bg-red-600 bg-opacity-50 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
                   <span className="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"></span>
-                  Fast Delivery Across India
+                  Same Day Delivery Within City
                 </div>
-                <h1 className="text-4xl lg:text-5xl font-extrabold leading-tight mb-6">
-                  Send Parcels &amp; Couriers{' '}
-                  <span className="text-yellow-300">Anywhere in India</span>
+                <h1 className="text-4xl lg:text-5xl font-extrabold leading-tight mb-4">
+                  Delivery Aapki,{' '}
+                  <span className="text-yellow-300">SpeedU Hamara</span>
                 </h1>
                 <p className="text-red-100 text-lg mb-8 leading-relaxed">
-                  Book courier pickups from your doorstep, track in real-time, and get guaranteed delivery.
-                  Trusted by 50,000+ customers across India.
+                  Fast and reliable within-city courier pickup and delivery. Book in 2 minutes, track in real-time.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/book" className="bg-white text-red-700 font-bold px-8 py-4 rounded-xl text-center hover:bg-red-50 transition-colors text-lg shadow-lg">
-                    Book a Courier →
-                  </Link>
-                  <Link href="/track" className="border-2 border-white text-white font-bold px-8 py-4 rounded-xl text-center hover:bg-white hover:text-red-700 transition-colors text-lg">
+                <div className="flex gap-3">
+                  <Link href="/track" className="border-2 border-white text-white font-semibold px-6 py-3 rounded-xl hover:bg-white hover:text-red-700 transition-colors">
                     Track Shipment
                   </Link>
                 </div>
               </div>
 
-              {/* Quick Track Box */}
-              <div className="bg-white rounded-2xl shadow-2xl p-8 text-gray-900">
-                <h2 className="text-xl font-bold text-gray-800 mb-2">Track Your Shipment</h2>
-                <p className="text-gray-500 text-sm mb-5">Enter your tracking ID to get real-time updates</p>
-                <form action="/track" method="get">
-                  <input
-                    name="id"
-                    type="text"
-                    placeholder="e.g. SPDABC123XYZ"
-                    className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500 mb-3 font-mono"
-                  />
-                  <button type="submit" className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-lg transition-colors">
-                    Track Now
-                  </button>
-                </form>
-                <div className="mt-5 pt-5 border-t border-gray-100">
-                  <p className="text-sm text-gray-500 text-center">
-                    Or{' '}
-                    <Link href="/book" className="text-red-600 font-semibold hover:underline">
-                      book a new courier
-                    </Link>
-                  </p>
+              {/* Booking Widget */}
+              <div className="bg-white rounded-2xl shadow-2xl p-6 text-gray-900">
+                {/* City selector */}
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-lg font-bold text-gray-900">Book a Delivery</h2>
+                  <div className="flex items-center gap-2 bg-red-700 rounded-xl px-3 py-2">
+                    <CitySelector selected={city} onSelect={setCity} />
+                  </div>
                 </div>
+
+                {/* Vehicle type */}
+                <p className="text-sm font-medium text-gray-500 mb-3">Select vehicle type</p>
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  {VEHICLE_TYPES.map((v) => (
+                    <button
+                      key={v.id}
+                      onClick={() => setVehicle(v.id)}
+                      className={`p-4 rounded-xl border-2 text-left transition-colors ${vehicle === v.id ? 'border-red-700 bg-red-50' : 'border-gray-100 hover:border-gray-200'}`}
+                    >
+                      <span className="text-3xl block mb-2">{v.emoji}</span>
+                      <p className="font-bold text-gray-900 text-sm">{v.label}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{v.desc}</p>
+                      <p className="text-xs font-semibold text-red-600 mt-1">{v.priceRange}</p>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Selected vehicle info */}
+                {VEHICLE_TYPES.filter(v => v.id === vehicle).map(v => (
+                  <div key={v.id} className="bg-gray-50 rounded-xl p-3 mb-4 flex justify-between text-xs text-gray-500">
+                    <span>⚖️ {v.weight}</span>
+                    <span>⏱️ {v.eta}</span>
+                    <span>📍 {city}</span>
+                  </div>
+                ))}
+
+                <button
+                  onClick={handleBook}
+                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl transition-colors text-lg flex items-center justify-center gap-2"
+                >
+                  Get Estimate &amp; Book →
+                </button>
+                <p className="text-xs text-gray-400 text-center mt-2">Takes ~2 minutes</p>
               </div>
             </div>
           </div>
@@ -68,9 +118,9 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               {[
-                { num: '50,000+', label: 'Happy Customers' },
-                { num: '500+', label: 'Cities Covered' },
+                { num: '5', label: 'Cities' },
                 { num: '99.2%', label: 'Delivery Success' },
+                { num: 'Same Day', label: 'Delivery' },
                 { num: '24/7', label: 'Support' },
               ].map((s) => (
                 <div key={s.label}>
@@ -87,25 +137,25 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-extrabold text-gray-900">Our Services</h2>
-              <p className="text-gray-500 mt-3 text-lg">Everything you need for hassle-free shipping</p>
+              <p className="text-gray-500 mt-3 text-lg">Fast within-city delivery for all your needs</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
               {[
-                { icon: <Package className="h-8 w-8" />, title: 'Document Courier', desc: 'Fast and secure delivery of documents, contracts, and important papers.', from: '₹50' },
-                { icon: <Truck className="h-8 w-8" />, title: 'Parcel Delivery', desc: 'Send packages of any size across India with door-to-door pickup.', from: '₹80' },
-                { icon: <Shield className="h-8 w-8" />, title: 'Fragile & Heavy', desc: 'Special handling for fragile items and heavy cargo with extra care.', from: '₹120' },
+                { emoji: '🏍️', title: '2-Wheeler Delivery', desc: 'Perfect for documents, small packages and urgent deliveries. Fast and affordable.', from: '₹50', weight: 'Up to 5 kg' },
+                { emoji: '🚐', title: 'Mini Truck Delivery', desc: 'For medium to heavy packages, furniture items and bulk goods within city.', from: '₹200', weight: 'Up to 50 kg' },
               ].map((s) => (
                 <div key={s.title} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <div className="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center text-red-700 mb-4">
-                    {s.icon}
-                  </div>
+                  <span className="text-4xl block mb-4">{s.emoji}</span>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">{s.title}</h3>
                   <p className="text-gray-500 text-sm mb-4 leading-relaxed">{s.desc}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-red-700 font-bold">Starting {s.from}</span>
-                    <Link href="/book" className="text-sm text-red-600 font-semibold hover:underline flex items-center gap-1">
+                    <div>
+                      <span className="text-red-700 font-bold">Starting {s.from}</span>
+                      <span className="text-gray-400 text-xs ml-2">{s.weight}</span>
+                    </div>
+                    <button onClick={handleBook} className="text-sm text-red-600 font-semibold hover:underline flex items-center gap-1">
                       Book <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -113,18 +163,40 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* How it Works */}
+        {/* Cities */}
         <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Available Cities</h2>
+            <p className="text-gray-500 mb-10">Expanding rapidly across India</p>
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              {[
+                { name: 'Bangalore', emoji: '🏙️' },
+                { name: 'Delhi', emoji: '🏛️' },
+                { name: 'Hyderabad', emoji: '🕌' },
+                { name: 'Muzaffarpur', emoji: '🌆' },
+                { name: 'Patna', emoji: '🏯' },
+              ].map((c) => (
+                <div key={c.name} className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-700 font-semibold px-5 py-3 rounded-full">
+                  <span>{c.emoji}</span> {c.name}
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-gray-400">More cities coming soon — Mumbai, Chennai, Kolkata, Pune and more</p>
+          </div>
+        </section>
+
+        {/* How it Works */}
+        <section className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-extrabold text-gray-900">How It Works</h2>
-              <p className="text-gray-500 mt-3">Book a courier in 3 simple steps</p>
+              <p className="text-gray-500 mt-3">Book a delivery in 3 simple steps</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { step: '01', title: 'Book Online', desc: 'Fill sender & receiver details, package info and pay securely.' },
-                { step: '02', title: 'We Pick Up', desc: 'Our delivery partner picks up from your doorstep at scheduled time.' },
-                { step: '03', title: 'Delivered', desc: 'Track in real-time and get notified when delivered.' },
+                { step: '01', title: 'Select City & Vehicle', desc: 'Choose your city and vehicle type based on package size.' },
+                { step: '02', title: 'Enter Addresses', desc: 'Fill pickup and delivery address within the city.' },
+                { step: '03', title: 'We Deliver', desc: 'Driver picks up and delivers same day. Track in real-time.' },
               ].map((step) => (
                 <div key={step.step} className="text-center">
                   <div className="w-20 h-20 bg-red-700 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -136,9 +208,9 @@ export default function HomePage() {
               ))}
             </div>
             <div className="text-center mt-10">
-              <Link href="/book" className="inline-block bg-red-700 hover:bg-red-800 text-white font-bold px-10 py-4 rounded-xl text-lg transition-colors shadow-lg">
-                Book Your First Courier
-              </Link>
+              <button onClick={handleBook} className="inline-block bg-red-700 hover:bg-red-800 text-white font-bold px-10 py-4 rounded-xl text-lg transition-colors shadow-lg">
+                Book a Delivery Now
+              </button>
             </div>
           </div>
         </section>
@@ -151,15 +223,13 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { icon: <MapPin className="h-6 w-6" />, title: 'Real-time Tracking', desc: 'Track every step of your shipment live.' },
-                { icon: <Clock className="h-6 w-6" />, title: 'On-time Delivery', desc: '99.2% on-time delivery record across India.' },
-                { icon: <Shield className="h-6 w-6" />, title: 'Secure & Insured', desc: 'Every shipment is handled with care and insured.' },
-                { icon: <Star className="h-6 w-6" />, title: '24/7 Support', desc: 'Our team is always ready to help you.' },
+                { icon: <MapPin className="h-6 w-6" />, title: 'Real-time Tracking', desc: 'Track every step of your delivery live.' },
+                { icon: <Clock className="h-6 w-6" />, title: 'Same Day Delivery', desc: 'Book before 6pm for same day delivery.' },
+                { icon: <Shield className="h-6 w-6" />, title: 'Secure & Safe', desc: 'Every package handled with care.' },
+                { icon: <Star className="h-6 w-6" />, title: '24/7 Support', desc: 'Our team is always ready to help.' },
               ].map((f) => (
                 <div key={f.title} className="bg-red-600 bg-opacity-50 rounded-xl p-5 text-center">
-                  <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    {f.icon}
-                  </div>
+                  <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mx-auto mb-3">{f.icon}</div>
                   <h3 className="font-bold mb-1">{f.title}</h3>
                   <p className="text-red-100 text-sm">{f.desc}</p>
                 </div>
@@ -174,9 +244,9 @@ export default function HomePage() {
             <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-12">What Customers Say</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { name: 'Ravi Kumar', city: 'Mumbai', text: 'Booked a courier for my office documents. Picked up same day and delivered next morning. Excellent service!', stars: 5 },
-                { name: 'Priya Sharma', city: 'Bangalore', text: 'Very easy to book online. Real-time tracking is fantastic. Will definitely use again.', stars: 5 },
-                { name: 'Arun Nair', city: 'Chennai', text: 'Sent a fragile item and it arrived in perfect condition. The packaging was handled with great care.', stars: 5 },
+                { name: 'Ravi Kumar', city: 'Bangalore', text: 'Booked a delivery for office documents. Picked up within 30 mins and delivered in 2 hours. Excellent!', stars: 5 },
+                { name: 'Priya Sharma', city: 'Delhi', text: 'Very easy to book online. Real-time tracking is fantastic. Will definitely use again.', stars: 5 },
+                { name: 'Arun Nair', city: 'Hyderabad', text: 'Sent a fragile item across the city. Arrived in perfect condition. Great service!', stars: 5 },
               ].map((t) => (
                 <div key={t.name} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                   <div className="flex gap-0.5 mb-3">
@@ -198,11 +268,11 @@ export default function HomePage() {
         {/* CTA */}
         <section className="py-16 bg-white">
           <div className="max-w-3xl mx-auto px-4 text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Ready to Ship?</h2>
-            <p className="text-gray-500 text-lg mb-8">Join 50,000+ customers who trust SpeedU for their deliveries.</p>
-            <Link href="/book" className="inline-block bg-red-700 hover:bg-red-800 text-white font-bold px-12 py-4 rounded-xl text-xl transition-colors shadow-xl">
-              Book a Courier Now
-            </Link>
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Ready to Send?</h2>
+            <p className="text-gray-500 text-lg mb-8">Fast, reliable within-city delivery at your fingertips.</p>
+            <button onClick={handleBook} className="inline-block bg-red-700 hover:bg-red-800 text-white font-bold px-12 py-4 rounded-xl text-xl transition-colors shadow-xl">
+              Book a Delivery Now
+            </button>
           </div>
         </section>
       </main>
