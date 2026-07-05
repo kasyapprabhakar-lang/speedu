@@ -69,10 +69,10 @@ export default function HomePage() {
               alt=""
               className="absolute inset-0 w-full h-full object-cover object-center"
             />
-            {/* Red tint overlay — makes it on-brand and keeps text readable */}
-            <div className="absolute inset-0 bg-red-900 opacity-70" />
+            {/* Dark overlay — keeps text readable */}
+            <div className="absolute inset-0 bg-red-950 opacity-50" />
             {/* Left-to-right fade so left text is clearest */}
-            <div className="absolute inset-0 bg-gradient-to-r from-red-950/80 via-red-900/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-red-950/90 via-red-950/50 to-transparent" />
           </div>
 
           {/* ── Content ── */}
