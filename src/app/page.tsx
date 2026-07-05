@@ -64,38 +64,38 @@ export default function HomePage() {
           {/* ── Decorative diagonal panels (Porter-style) ── */}
           <div className="absolute inset-0 pointer-events-none select-none">
             {/* base gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-red-950 via-red-900 to-red-800" />
+            <div className="absolute inset-0 bg-gradient-to-r from-red-950 to-red-800" />
 
             {/* Panel 1 – bike */}
             <div
-              className="absolute top-0 bottom-0 right-[38%] w-[28%] bg-red-800 flex items-center justify-center overflow-hidden"
-              style={{ clipPath: 'polygon(12% 0, 100% 0, 88% 100%, 0% 100%)' }}
+              className="absolute top-0 bottom-0 right-[36%] w-[30%] flex items-center justify-center overflow-hidden"
+              style={{ clipPath: 'polygon(12% 0, 100% 0, 88% 100%, 0% 100%)', background: 'rgba(220,30,30,0.55)' }}
             >
-              <span className="text-[170px] leading-none opacity-30 transform -rotate-6 translate-x-4">🏍️</span>
+              <span className="text-[190px] leading-none opacity-80 transform -rotate-6 translate-x-4 drop-shadow-2xl">🏍️</span>
             </div>
 
             {/* Panel 2 – mini truck */}
             <div
-              className="absolute top-0 bottom-0 right-[13%] w-[28%] bg-red-700 flex items-center justify-center overflow-hidden"
-              style={{ clipPath: 'polygon(12% 0, 100% 0, 88% 100%, 0% 100%)' }}
+              className="absolute top-0 bottom-0 right-[10%] w-[30%] flex items-center justify-center overflow-hidden"
+              style={{ clipPath: 'polygon(12% 0, 100% 0, 88% 100%, 0% 100%)', background: 'rgba(200,20,20,0.50)' }}
             >
-              <span className="text-[160px] leading-none opacity-25 translate-x-2">🚐</span>
+              <span className="text-[175px] leading-none opacity-80 translate-x-2 drop-shadow-2xl">🚐</span>
             </div>
 
             {/* Panel 3 – movers */}
             <div
-              className="absolute top-0 bottom-0 right-[-6%] w-[22%] bg-red-600 flex items-center justify-center overflow-hidden"
-              style={{ clipPath: 'polygon(14% 0, 100% 0, 100% 100%, 0% 100%)' }}
+              className="absolute top-0 bottom-0 right-[-4%] w-[24%] flex items-center justify-center overflow-hidden"
+              style={{ clipPath: 'polygon(14% 0, 100% 0, 100% 100%, 0% 100%)', background: 'rgba(180,15,15,0.45)' }}
             >
-              <span className="text-[140px] leading-none opacity-20 rotate-6">🏠</span>
+              <span className="text-[155px] leading-none opacity-80 rotate-6 drop-shadow-2xl">🏠</span>
             </div>
 
             {/* Left fade so text stays readable */}
-            <div className="absolute inset-0 bg-gradient-to-r from-red-950 via-red-900/85 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-red-950 via-red-950/70 to-transparent" />
 
             {/* Subtle dot pattern */}
             <div
-              className="absolute inset-0 opacity-[0.04]"
+              className="absolute inset-0 opacity-[0.06]"
               style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
             />
           </div>
@@ -104,8 +104,8 @@ export default function HomePage() {
           <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
-                <div className="inline-flex items-center gap-2 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-                  <span className="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                <div className="inline-flex items-center gap-2 bg-yellow-400 text-red-900 rounded-full px-4 py-1.5 text-sm font-bold mb-6">
+                  <span className="h-2 w-2 bg-red-700 rounded-full animate-pulse"></span>
                   Same Day Delivery Within City
                 </div>
                 <h1 className="text-4xl lg:text-6xl font-extrabold leading-tight mb-4 drop-shadow-lg">
