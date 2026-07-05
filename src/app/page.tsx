@@ -59,45 +59,20 @@ export default function HomePage() {
       <Navbar />
       <main>
         {/* Hero Section */}
-        <section className="relative bg-red-900 text-white overflow-hidden min-h-[580px] flex items-center">
+        <section className="relative text-white overflow-hidden min-h-[580px] flex items-center">
 
-          {/* ── Decorative diagonal panels (Porter-style) ── */}
+          {/* ── Background image + overlays ── */}
           <div className="absolute inset-0 pointer-events-none select-none">
-            {/* base gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-red-950 to-red-800" />
-
-            {/* Panel 1 – bike */}
-            <div
-              className="absolute top-0 bottom-0 right-[36%] w-[30%] flex items-center justify-center overflow-hidden"
-              style={{ clipPath: 'polygon(12% 0, 100% 0, 88% 100%, 0% 100%)', background: 'rgba(220,30,30,0.55)' }}
-            >
-              <span className="text-[190px] leading-none opacity-80 transform -rotate-6 translate-x-4 drop-shadow-2xl">🏍️</span>
-            </div>
-
-            {/* Panel 2 – mini truck */}
-            <div
-              className="absolute top-0 bottom-0 right-[10%] w-[30%] flex items-center justify-center overflow-hidden"
-              style={{ clipPath: 'polygon(12% 0, 100% 0, 88% 100%, 0% 100%)', background: 'rgba(200,20,20,0.50)' }}
-            >
-              <span className="text-[175px] leading-none opacity-80 translate-x-2 drop-shadow-2xl">🚐</span>
-            </div>
-
-            {/* Panel 3 – movers */}
-            <div
-              className="absolute top-0 bottom-0 right-[-4%] w-[24%] flex items-center justify-center overflow-hidden"
-              style={{ clipPath: 'polygon(14% 0, 100% 0, 100% 100%, 0% 100%)', background: 'rgba(180,15,15,0.45)' }}
-            >
-              <span className="text-[155px] leading-none opacity-80 rotate-6 drop-shadow-2xl">🏠</span>
-            </div>
-
-            {/* Left fade so text stays readable */}
-            <div className="absolute inset-0 bg-gradient-to-r from-red-950 via-red-950/70 to-transparent" />
-
-            {/* Subtle dot pattern */}
-            <div
-              className="absolute inset-0 opacity-[0.06]"
-              style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+            {/* Photo */}
+            <img
+              src="/hero-bg.jpg"
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover object-center"
             />
+            {/* Red tint overlay — makes it on-brand and keeps text readable */}
+            <div className="absolute inset-0 bg-red-900 opacity-70" />
+            {/* Left-to-right fade so left text is clearest */}
+            <div className="absolute inset-0 bg-gradient-to-r from-red-950/80 via-red-900/40 to-transparent" />
           </div>
 
           {/* ── Content ── */}
