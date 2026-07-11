@@ -131,12 +131,6 @@ function PMForm() {
             <p className="text-gray-500 mt-2">Fill in your details and we'll call you with a quote within 30 minutes</p>
           </div>
 
-          {/* City badge */}
-          <div className="flex justify-center mb-6">
-            <div className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-full text-sm font-semibold">
-              <MapPin className="h-4 w-4" /> Moving within {city}
-            </div>
-          </div>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-5 text-sm">{error}</div>
