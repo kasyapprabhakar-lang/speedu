@@ -24,7 +24,7 @@ const VEHICLE_TYPES = [
     label: 'Mini Truck',
     emoji: '🚐',
     desc: 'Medium & heavy packages',
-    weight: 'Up to 50 kg',
+    weight: 'Up to 200 kg',
     eta: 'Same day',
     priceRange: '₹200 – ₹600',
     isQuote: false,
@@ -174,7 +174,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
               {[
                 { emoji: '🏍️', title: '2-Wheeler Delivery', desc: 'Perfect for documents, small packages and urgent deliveries. Fast and affordable.', from: '₹50', weight: 'Up to 5 kg' },
-                { emoji: '🚐', title: 'Mini Truck Delivery', desc: 'For medium to heavy packages, furniture items and bulk goods within city.', from: '₹200', weight: 'Up to 50 kg' },
+                { emoji: '🚐', title: 'Mini Truck Delivery', desc: 'For medium to heavy packages, furniture items and bulk goods within city.', from: '₹200', weight: 'Up to 200 kg' },
               ].map((s) => (
                 <div key={s.title} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                   <span className="text-4xl block mb-4">{s.emoji}</span>

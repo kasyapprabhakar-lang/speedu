@@ -25,8 +25,8 @@ const PACKAGE_TYPES = {
     { value: 'small-parcel', label: '📦 Small Parcel', basePrice: 80, perKg: 15, maxKg: 5 },
   ],
   'mini-truck': [
-    { value: 'medium-parcel', label: '🗃️ Medium Parcel', basePrice: 200, perKg: 10, maxKg: 20 },
-    { value: 'heavy', label: '🏗️ Heavy / Oversized', basePrice: 350, perKg: 8, maxKg: 50 },
+    { value: 'medium-parcel', label: '🗃️ Medium Parcel', basePrice: 200, perKg: 10, maxKg: 100 },
+    { value: 'heavy', label: '🏗️ Heavy / Oversized', basePrice: 350, perKg: 8, maxKg: 200 },
   ],
 }
 
