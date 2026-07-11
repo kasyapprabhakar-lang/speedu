@@ -34,8 +34,8 @@ export default function FloatingContact() {
           aria-label="Email support"
           className={`w-14 h-14 rounded-full border-2 border-dashed flex items-center justify-center shadow-lg transition-all duration-200 shrink-0 -ml-px
             ${expanded === 'email'
-              ? 'bg-gray-800 border-gray-600 text-white'
-              : 'bg-white border-gray-400 text-gray-600 hover:border-red-500 hover:text-red-600'}`}
+              ? 'bg-red-700 border-red-500 text-white'
+              : 'bg-red-700 border-red-400 text-white hover:bg-red-800'}`}
         >
           {expanded === 'email' ? <X className="h-5 w-5" /> : <Mail className="h-5 w-5" />}
         </button>
@@ -60,8 +60,8 @@ export default function FloatingContact() {
           aria-label="Call support"
           className={`w-14 h-14 rounded-full border-2 border-dashed flex items-center justify-center shadow-lg transition-all duration-200 shrink-0 -ml-px
             ${expanded === 'phone'
-              ? 'bg-gray-800 border-gray-600 text-white'
-              : 'bg-white border-gray-400 text-gray-600 hover:border-red-500 hover:text-red-600'}`}
+              ? 'bg-red-700 border-red-500 text-white'
+              : 'bg-red-700 border-red-400 text-white hover:bg-red-800'}`}
         >
           {expanded === 'phone' ? <X className="h-5 w-5" /> : <Phone className="h-5 w-5" />}
         </button>
