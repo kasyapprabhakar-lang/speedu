@@ -26,7 +26,7 @@ interface Props {
 
 declare global {
   interface Window {
-    google: typeof google
+    google: typeof globalThis.google
     initGoogleMaps: () => void
   }
 }
