@@ -43,7 +43,7 @@ const VEHICLE_TYPES = [
 
 export default function HomePage() {
   const router = useRouter()
-  const [city, setCity] = useState('Bangalore')
+  const [city, setCity] = useState('Hyderabad')
   const [vehicle, setVehicle] = useState('two-wheeler')
 
   const handleBook = () => {
@@ -202,18 +202,18 @@ export default function HomePage() {
             <p className="text-gray-500 mb-10">Expanding rapidly across India</p>
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               {[
-                { name: 'Bangalore', emoji: '🏙️' },
-                { name: 'Delhi', emoji: '🏛️' },
+                { name: 'Wayanad', emoji: '🌿' },
+                { name: 'Mysuru', emoji: '🏯' },
                 { name: 'Hyderabad', emoji: '🕌' },
-                { name: 'Muzaffarpur', emoji: '🌆' },
-                { name: 'Patna', emoji: '🏯' },
+                { name: 'Chennai', emoji: '🏛️' },
+                { name: 'Visakhapatnam', emoji: '🌊' },
               ].map((c) => (
                 <div key={c.name} className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-700 font-semibold px-5 py-3 rounded-full">
                   <span>{c.emoji}</span> {c.name}
                 </div>
               ))}
             </div>
-            <p className="text-sm text-gray-400">More cities coming soon — Mumbai, Chennai, Kolkata, Pune and more</p>
+            <p className="text-sm text-gray-400">Coming soon — Patna, Kolkata, Pune, Jaipur, Surat and more</p>
           </div>
         </section>
 

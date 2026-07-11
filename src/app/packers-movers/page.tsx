@@ -9,11 +9,11 @@ import { MapPin, Home, Package, Phone, User, Calendar } from 'lucide-react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const CITY_STATE: Record<string, string> = {
-  'Bangalore': 'Karnataka',
-  'Delhi': 'Delhi',
+  'Wayanad': 'Kerala',
+  'Mysuru': 'Karnataka',
   'Hyderabad': 'Telangana',
-  'Muzaffarpur': 'Bihar',
-  'Patna': 'Bihar',
+  'Chennai': 'Tamil Nadu',
+  'Visakhapatnam': 'Andhra Pradesh',
 }
 
 const HOME_TYPES = ['1 BHK', '2 BHK', '3 BHK', '4 BHK+', 'Studio', 'Office / Shop']

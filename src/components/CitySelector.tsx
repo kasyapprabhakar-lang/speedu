@@ -4,11 +4,11 @@ import { useState } from 'react'
 import { MapPin, ChevronDown, X } from 'lucide-react'
 
 const AVAILABLE_CITIES = [
-  { name: 'Bangalore', emoji: '🏙️', state: 'Karnataka' },
-  { name: 'Delhi', emoji: '🏛️', state: 'Delhi' },
+  { name: 'Wayanad', emoji: '🌿', state: 'Kerala' },
+  { name: 'Mysuru', emoji: '🏯', state: 'Karnataka' },
   { name: 'Hyderabad', emoji: '🕌', state: 'Telangana' },
-  { name: 'Muzaffarpur', emoji: '🌆', state: 'Bihar' },
-  { name: 'Patna', emoji: '🏯', state: 'Bihar' },
+  { name: 'Chennai', emoji: '🏛️', state: 'Tamil Nadu' },
+  { name: 'Visakhapatnam', emoji: '🌊', state: 'Andhra Pradesh' },
 ]
 
 interface CitySelectorProps {
@@ -62,7 +62,7 @@ export default function CitySelector({ selected, onSelect, variant = 'dark' }: C
             <div className="border-t border-gray-100 pt-4">
               <p className="text-xs text-gray-400 font-medium mb-3">Coming soon</p>
               <div className="flex flex-wrap gap-2">
-                {['Mumbai', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Surat'].map((city) => (
+                {['Patna', 'Kolkata', 'Pune', 'Jaipur', 'Surat'].map((city) => (
                   <span key={city} className="text-xs bg-gray-100 text-gray-400 px-3 py-1.5 rounded-full">{city}</span>
                 ))}
               </div>
