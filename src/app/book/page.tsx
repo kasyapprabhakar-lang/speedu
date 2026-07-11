@@ -7,6 +7,7 @@ import Footer from '@/components/Footer'
 import { createClient } from '@/lib/supabase/client'
 import { generateTrackingId, formatCurrency } from '@/lib/utils'
 import { MapPin, Banknote, CreditCard } from 'lucide-react'
+import AddressAutocomplete from '@/components/AddressAutocomplete'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const CITY_STATE: Record<string, string> = {
@@ -46,7 +47,9 @@ function BookForm() {
 
   const [form, setForm] = useState({
     senderName: '', senderPhone: '', senderAddress: '', senderPincode: '',
+    senderLat: 0, senderLng: 0,
     receiverName: '', receiverPhone: '', receiverAddress: '', receiverPincode: '',
+    receiverLat: 0, receiverLng: 0,
     packageType: packageTypes[0].value, weightKg: '1', description: '',
   })
 
@@ -93,9 +96,11 @@ function BookForm() {
         sender_name: form.senderName, sender_phone: form.senderPhone,
         sender_address: form.senderAddress, sender_city: city,
         sender_pincode: form.senderPincode, sender_state: state,
+        sender_lat: form.senderLat || null, sender_lng: form.senderLng || null,
         receiver_name: form.receiverName, receiver_phone: form.receiverPhone,
         receiver_address: form.receiverAddress, receiver_city: city,
         receiver_pincode: form.receiverPincode, receiver_state: state,
+        receiver_lat: form.receiverLat || null, receiver_lng: form.receiverLng || null,
         package_type: form.packageType, weight_kg: weight,
         description: form.description, amount: totalAmount * 100,
         cod_charge: paymentMethod === 'cod' ? COD_CHARGE * 100 : 0,
@@ -164,11 +169,16 @@ function BookForm() {
                     </div>
                     <div>
                       <label className={labelCls}>Address *</label>
-                      <input type="text" placeholder="Flat, Street, Area, Landmark" value={form.senderAddress} onChange={set('senderAddress')} className={inputCls} />
+                      <AddressAutocomplete
+                        placeholder="Search pickup address..."
+                        value={form.senderAddress}
+                        city={city}
+                        onSelect={r => setForm(f => ({ ...f, senderAddress: r.address, senderLat: r.lat, senderLng: r.lng, senderPincode: r.pincode || f.senderPincode }))}
+                      />
                     </div>
                     <div>
                       <label className={labelCls}>Pincode *</label>
-                      <input type="text" placeholder="6-digit pincode" value={form.senderPincode}
+                      <input type="text" placeholder="Auto-filled or enter manually" value={form.senderPincode}
                         onChange={e => setForm(f => ({ ...f, senderPincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
                         className={inputCls} />
                     </div>
@@ -198,11 +208,16 @@ function BookForm() {
                     </div>
                     <div>
                       <label className={labelCls}>Address *</label>
-                      <input type="text" placeholder="Flat, Street, Area, Landmark" value={form.receiverAddress} onChange={set('receiverAddress')} className={inputCls} />
+                      <AddressAutocomplete
+                        placeholder="Search drop address..."
+                        value={form.receiverAddress}
+                        city={city}
+                        onSelect={r => setForm(f => ({ ...f, receiverAddress: r.address, receiverLat: r.lat, receiverLng: r.lng, receiverPincode: r.pincode || f.receiverPincode }))}
+                      />
                     </div>
                     <div>
                       <label className={labelCls}>Pincode *</label>
-                      <input type="text" placeholder="6-digit pincode" value={form.receiverPincode}
+                      <input type="text" placeholder="Auto-filled or enter manually" value={form.receiverPincode}
                         onChange={e => setForm(f => ({ ...f, receiverPincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
                         className={inputCls} />
                     </div>

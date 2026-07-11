@@ -41,12 +41,16 @@ interface Booking {
   sender_city: string
   sender_state: string
   sender_pincode: string
+  sender_lat: number | null
+  sender_lng: number | null
   receiver_name: string
   receiver_phone: string
   receiver_address: string
   receiver_city: string
   receiver_state: string
   receiver_pincode: string
+  receiver_lat: number | null
+  receiver_lng: number | null
   package_type: string
   weight_kg: number
   description: string
@@ -67,16 +71,25 @@ function isAdmin(user: User): boolean {
 function buildWhatsAppMessage(b: Booking): string {
   const amount = Math.round(b.amount / 100)
   const paymentInfo = b.payment_method === 'cod' ? `COD - ₹${amount} (collect on delivery)` : `Paid Online - ₹${amount}`
+  const pickupMap = b.sender_lat && b.sender_lng
+    ? `https://maps.google.com/?q=${b.sender_lat},${b.sender_lng}`
+    : `https://maps.google.com/?q=${encodeURIComponent(b.sender_address + ', ' + b.sender_city)}`
+  const dropMap = b.receiver_lat && b.receiver_lng
+    ? `https://maps.google.com/?q=${b.receiver_lat},${b.receiver_lng}`
+    : `https://maps.google.com/?q=${encodeURIComponent(b.receiver_address + ', ' + b.receiver_city)}`
+
   const msg = `🚚 *New SpeedU Order*
 📦 ID: ${b.tracking_id}
 ━━━━━━━━━━━━━━
 📍 *Pickup*
 ${b.sender_name} | +91 ${b.sender_phone}
-${b.sender_address}, ${b.sender_city}, ${b.sender_state} - ${b.sender_pincode}
+${b.sender_address}, ${b.sender_city} - ${b.sender_pincode}
+🗺️ Navigate: ${pickupMap}
 
-📍 *Delivery*
+🏁 *Drop*
 ${b.receiver_name} | +91 ${b.receiver_phone}
-${b.receiver_address}, ${b.receiver_city}, ${b.receiver_state} - ${b.receiver_pincode}
+${b.receiver_address}, ${b.receiver_city} - ${b.receiver_pincode}
+🗺️ Navigate: ${dropMap}
 
 📦 *Package*
 Type: ${b.package_type} | Weight: ${b.weight_kg} kg
