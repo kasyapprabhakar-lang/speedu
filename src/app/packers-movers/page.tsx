@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { createClient } from '@/lib/supabase/client'
 import { MapPin, Home, Package, Phone, User, Calendar } from 'lucide-react'
+import AddressAutocomplete from '@/components/AddressAutocomplete'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const CITY_STATE: Record<string, string> = {
@@ -167,11 +168,16 @@ function PMForm() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address *</label>
-                  <input type="text" placeholder="Flat, Street, Area, Landmark" value={form.fromAddress} onChange={update('fromAddress')} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  <AddressAutocomplete
+                    placeholder="Search pickup address..."
+                    value={form.fromAddress}
+                    city={city}
+                    onSelect={r => setForm(f => ({ ...f, fromAddress: r.address, fromPincode: r.pincode || f.fromPincode }))}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Pincode *</label>
-                  <input type="text" placeholder="6-digit pincode" value={form.fromPincode} onChange={(e) => setForm((f) => ({ ...f, fromPincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  <input type="text" placeholder="Auto-filled or enter manually" value={form.fromPincode} onChange={(e) => setForm((f) => ({ ...f, fromPincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Floor Number</label>
@@ -195,11 +201,16 @@ function PMForm() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Drop Address *</label>
-                  <input type="text" placeholder="Flat, Street, Area, Landmark" value={form.toAddress} onChange={update('toAddress')} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  <AddressAutocomplete
+                    placeholder="Search drop address..."
+                    value={form.toAddress}
+                    city={city}
+                    onSelect={r => setForm(f => ({ ...f, toAddress: r.address, toPincode: r.pincode || f.toPincode }))}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Pincode *</label>
-                  <input type="text" placeholder="6-digit pincode" value={form.toPincode} onChange={(e) => setForm((f) => ({ ...f, toPincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
+                  <input type="text" placeholder="Auto-filled or enter manually" value={form.toPincode} onChange={(e) => setForm((f) => ({ ...f, toPincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:border-red-500 transition" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Floor Number</label>
