@@ -44,17 +44,17 @@ export default function CitySelector({ selected, onSelect, variant = 'dark' }: C
             </div>
 
             <p className="text-sm text-gray-500 mb-4">Currently available in</p>
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
               {AVAILABLE_CITIES.map((city) => (
                 <button
                   key={city.name}
                   onClick={() => { onSelect(city.name); setOpen(false) }}
                   className={`flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-colors ${selected === city.name ? 'border-red-700 bg-red-50' : 'border-gray-100 hover:border-red-200 hover:bg-gray-50'}`}
                 >
-                  <span className="text-3xl">{city.emoji}</span>
-                  <div>
-                    <p className="font-bold text-gray-900">{city.name}</p>
-                    <p className="text-xs text-gray-400">{city.state}</p>
+                  <span className="text-3xl shrink-0">{city.emoji}</span>
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-900 truncate">{city.name}</p>
+                    <p className="text-xs text-gray-400 truncate">{city.state}</p>
                   </div>
                 </button>
               ))}
