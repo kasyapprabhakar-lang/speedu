@@ -16,6 +16,7 @@ const CITY_STATE: Record<string, string> = {
   'Hyderabad': 'Telangana',
   'Chennai': 'Tamil Nadu',
   'Visakhapatnam': 'Andhra Pradesh',
+  'Muzaffarpur': 'Bihar',
 }
 
 const PACKAGE_TYPES = {

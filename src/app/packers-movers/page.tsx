@@ -14,6 +14,7 @@ const CITY_STATE: Record<string, string> = {
   'Hyderabad': 'Telangana',
   'Chennai': 'Tamil Nadu',
   'Visakhapatnam': 'Andhra Pradesh',
+  'Muzaffarpur': 'Bihar',
 }
 
 const HOME_TYPES = ['1 BHK', '2 BHK', '3 BHK', '4 BHK+', 'Studio', 'Office / Shop']

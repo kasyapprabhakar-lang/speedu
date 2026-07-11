@@ -9,6 +9,7 @@ const AVAILABLE_CITIES = [
   { name: 'Hyderabad', emoji: '🕌', state: 'Telangana' },
   { name: 'Chennai', emoji: '🏛️', state: 'Tamil Nadu' },
   { name: 'Visakhapatnam', emoji: '🌊', state: 'Andhra Pradesh' },
+  { name: 'Muzaffarpur', emoji: '🌆', state: 'Bihar' },
 ]
 
 interface CitySelectorProps {

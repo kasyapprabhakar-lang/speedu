@@ -150,7 +150,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               {[
-                { num: '5', label: 'Cities' },
+                { num: '6', label: 'Cities' },
                 { num: '99.2%', label: 'Delivery Success' },
                 { num: 'Same Day', label: 'Delivery' },
                 { num: '24/7', label: 'Support' },
@@ -207,6 +207,7 @@ export default function HomePage() {
                 { name: 'Hyderabad', emoji: '🕌' },
                 { name: 'Chennai', emoji: '🏛️' },
                 { name: 'Visakhapatnam', emoji: '🌊' },
+                { name: 'Muzaffarpur', emoji: '🌆' },
               ].map((c) => (
                 <div key={c.name} className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-700 font-semibold px-5 py-3 rounded-full">
                   <span>{c.emoji}</span> {c.name}
