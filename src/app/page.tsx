@@ -43,7 +43,7 @@ const VEHICLE_TYPES = [
 
 export default function HomePage() {
   const router = useRouter()
-  const [city, setCity] = useState('Hyderabad')
+  const [city, setCity] = useState('Muzaffarpur')
   const [vehicle, setVehicle] = useState('two-wheeler')
 
   const handleBook = () => {
