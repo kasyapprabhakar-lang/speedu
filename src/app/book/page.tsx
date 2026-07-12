@@ -96,7 +96,7 @@ function BookForm() {
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
 
-  const hasDistance = form.senderLat && form.senderLng && form.receiverLat && form.receiverLng
+  const hasDistance = !!(form.senderLat && form.senderLng && form.receiverLat && form.receiverLng)
   const distanceKm = hasDistance
     ? calcDistanceKm(form.senderLat, form.senderLng, form.receiverLat, form.receiverLng)
     : 0
