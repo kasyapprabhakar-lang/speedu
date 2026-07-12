@@ -21,8 +21,8 @@ const CITY_STATE: Record<string, string> = {
 
 // Porter-style distance-based pricing
 const VEHICLE_CONFIG = {
-  'two-wheeler': { baseFare: 55, perKm: 12, freeKm: 1, label: '🏍️ 2-Wheeler', maxKg: 20 },
-  'mini-truck':  { baseFare: 200, perKm: 20, freeKm: 1, label: '🚐 Mini Truck', maxKg: 200 },
+  'two-wheeler': { baseFare: 55, perKm: 12, freeKm: 1, label: '🏍️ 2-Wheeler', maxKg: 20, maxDistanceKm: 30 },
+  'mini-truck':  { baseFare: 200, perKm: 20, freeKm: 1, label: '🚐 Mini Truck', maxKg: 200, maxDistanceKm: 50 },
 }
 
 const PACKAGE_TYPES = {
@@ -137,6 +137,10 @@ function BookForm() {
     if (senderPhone.length !== 10 || receiverPhone.length !== 10) { setError('Enter valid 10-digit phone numbers'); return }
     if (senderPincode.length !== 6 || receiverPincode.length !== 6) { setError('Enter valid 6-digit pincodes'); return }
     if (!user) { router.push('/auth/login?next=/book'); return }
+    if (hasDistance && distanceKm > cfg.maxDistanceKm) {
+      setError(`Both addresses must be within ${city}. Distance ${distanceKm.toFixed(1)} km exceeds the ${cfg.maxDistanceKm} km city limit for ${cfg.label}.`)
+      return
+    }
 
     setLoading(true); setError('')
     try {
@@ -327,7 +331,13 @@ function BookForm() {
                 <h2 className="font-bold text-gray-900 mb-4">Price Estimate</h2>
 
                 {/* Distance badge */}
-                {hasDistance ? (
+                {hasDistance && distanceKm > cfg.maxDistanceKm ? (
+                  <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 mb-4 text-sm">
+                    <Navigation className="h-4 w-4 shrink-0" />
+                    <span className="font-semibold">{distanceKm.toFixed(1)} km</span>
+                    <span>— exceeds {cfg.maxDistanceKm} km city limit</span>
+                  </div>
+                ) : hasDistance ? (
                   <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-lg px-3 py-2 mb-4 text-sm">
                     <Navigation className="h-4 w-4 shrink-0" />
                     <span className="font-semibold">{distanceKm.toFixed(1)} km</span>

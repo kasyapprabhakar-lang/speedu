@@ -64,6 +64,7 @@ export default function AddressAutocomplete({ placeholder, value, city, onSelect
 
   const serviceRef = useRef<google.maps.places.AutocompleteService | null>(null)
   const geocoderRef = useRef<google.maps.Geocoder | null>(null)
+  const cityBoundsRef = useRef<google.maps.LatLngBounds | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || ''
@@ -72,9 +73,15 @@ export default function AddressAutocomplete({ placeholder, value, city, onSelect
     loadGoogleMaps(apiKey).then(() => {
       serviceRef.current = new window.google.maps.places.AutocompleteService()
       geocoderRef.current = new window.google.maps.Geocoder()
+      // Get city bounds for restricting suggestions
+      geocoderRef.current.geocode({ address: `${city}, India` }, (results, status) => {
+        if (status === 'OK' && results?.[0]) {
+          cityBoundsRef.current = results[0].geometry.viewport
+        }
+      })
       setReady(true)
     })
-  }, [apiKey])
+  }, [apiKey, city])
 
   useEffect(() => { setInputValue(value) }, [value])
 
@@ -99,7 +106,7 @@ export default function AddressAutocomplete({ placeholder, value, city, onSelect
         input: query,
         componentRestrictions: { country: 'in' },
         types: ['geocode', 'establishment'],
-        location: undefined,
+        ...(cityBoundsRef.current ? { bounds: cityBoundsRef.current, strictBounds: true } : {}),
       },
       (predictions, status) => {
         setLoading(false)
