@@ -22,7 +22,7 @@ const CITY_STATE: Record<string, string> = {
 // Porter-style distance-based pricing
 const VEHICLE_CONFIG = {
   'two-wheeler': { baseFare: 55, perKm: 12, freeKm: 1, label: '🏍️ 2-Wheeler', maxKg: 20, maxDistanceKm: 30 },
-  'mini-truck':  { baseFare: 200, perKm: 20, freeKm: 1, label: '🚐 Mini Truck', maxKg: 200, maxDistanceKm: 50 },
+  'mini-truck':  { baseFare: 200, perKm: 20, freeKm: 1, label: '🚐 Mini Truck', maxKg: 200, maxDistanceKm: 300 },
 }
 
 const PACKAGE_TYPES = {
@@ -249,6 +249,7 @@ function BookForm() {
                     <div>
                       <label className={labelCls}>Address *</label>
                       <AddressAutocomplete placeholder="Search pickup address..." value={form.senderAddress} city={city}
+                        boundsArea={vehicle === 'mini-truck' ? state : undefined}
                         onSelect={r => setForm(f => ({ ...f, senderAddress: r.address, senderLat: r.lat, senderLng: r.lng, senderPincode: r.pincode || f.senderPincode }))} />
                     </div>
                     <div>
@@ -283,6 +284,7 @@ function BookForm() {
                     <div>
                       <label className={labelCls}>Address *</label>
                       <AddressAutocomplete placeholder="Search drop address..." value={form.receiverAddress} city={city}
+                        boundsArea={vehicle === 'mini-truck' ? state : undefined}
                         onSelect={r => setForm(f => ({ ...f, receiverAddress: r.address, receiverLat: r.lat, receiverLng: r.lng, receiverPincode: r.pincode || f.receiverPincode }))} />
                     </div>
                     <div>

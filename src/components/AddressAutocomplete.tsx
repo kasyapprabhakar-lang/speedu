@@ -21,6 +21,7 @@ interface Props {
   placeholder?: string
   value: string
   city: string
+  boundsArea?: string  // override geocode area for bounds (e.g. state name)
   onSelect: (result: PlaceResult) => void
 }
 
@@ -54,7 +55,7 @@ function loadGoogleMaps(apiKey: string): Promise<void> {
   })
 }
 
-export default function AddressAutocomplete({ placeholder, value, city, onSelect }: Props) {
+export default function AddressAutocomplete({ placeholder, value, city, boundsArea, onSelect }: Props) {
   const [inputValue, setInputValue] = useState(value)
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(false)
@@ -73,15 +74,16 @@ export default function AddressAutocomplete({ placeholder, value, city, onSelect
     loadGoogleMaps(apiKey).then(() => {
       serviceRef.current = new window.google.maps.places.AutocompleteService()
       geocoderRef.current = new window.google.maps.Geocoder()
-      // Get city bounds for restricting suggestions
-      geocoderRef.current.geocode({ address: `${city}, India` }, (results, status) => {
+      // Get bounds for restricting suggestions (city or state)
+      const area = boundsArea || city
+      geocoderRef.current.geocode({ address: `${area}, India` }, (results, status) => {
         if (status === 'OK' && results?.[0]) {
           cityBoundsRef.current = results[0].geometry.viewport
         }
       })
       setReady(true)
     })
-  }, [apiKey, city])
+  }, [apiKey, city, boundsArea])
 
   useEffect(() => { setInputValue(value) }, [value])
 
