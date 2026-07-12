@@ -41,10 +41,16 @@ const VEHICLE_TYPES = [
   },
 ]
 
+const CITY_STATE: Record<string, string> = {
+  'Wayanad': 'Kerala', 'Mysuru': 'Karnataka', 'Hyderabad': 'Telangana',
+  'Chennai': 'Tamil Nadu', 'Visakhapatnam': 'Andhra Pradesh', 'Muzaffarpur': 'Bihar',
+}
+
 export default function HomePage() {
   const router = useRouter()
   const [city, setCity] = useState('Muzaffarpur')
   const [vehicle, setVehicle] = useState('two-wheeler')
+  const state = CITY_STATE[city] || ''
 
   const handleBook = () => {
     if (vehicle === 'packers-movers') {
@@ -127,7 +133,10 @@ export default function HomePage() {
                   <div key={v.id} className="bg-gray-50 rounded-xl p-3 mb-4 flex justify-between text-xs text-gray-500">
                     <span>⚖️ {v.weight}</span>
                     <span>⏱️ {v.eta}</span>
-                    <span>📍 {city}</span>
+                    {vehicle === 'mini-truck'
+                      ? <span>📍 All of {state} · up to 300 km</span>
+                      : <span>📍 Within {city} · up to 30 km</span>
+                    }
                   </div>
                 ))}
 
