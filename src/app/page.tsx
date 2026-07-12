@@ -206,25 +206,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Promo Video */}
-        <section className="py-14 bg-gray-900">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-            <h2 className="text-3xl font-extrabold text-white mb-3">See SpeedU in Action</h2>
-            <p className="text-gray-400 mb-8">Fast, reliable delivery — straight from our team</p>
-            <div className="rounded-2xl overflow-hidden shadow-2xl mx-auto max-w-sm">
-              <video
-                src="/speedu-promo.mp4"
-                controls
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full"
-              />
-            </div>
-          </div>
-        </section>
-
         {/* Cities */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
