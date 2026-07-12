@@ -57,6 +57,14 @@ function BookForm() {
   const supabase = createClient()
 
   useEffect(() => {
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
+    document.body.appendChild(script)
+    return () => { document.body.removeChild(script) }
+  }, [])
+
+  useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
       if (data.user) {
@@ -78,6 +86,26 @@ function BookForm() {
   const codCharge = paymentMethod === 'cod' ? COD_CHARGE : 0
   const totalAmount = Math.round((baseAmount + codCharge) * 1.18)
 
+  const saveBooking = async (trackingId: string, paymentStatus: string, razorpayOrderId?: string) => {
+    return supabase.from('bookings').insert({
+      tracking_id: trackingId, user_id: user!.id,
+      sender_name: form.senderName, sender_phone: form.senderPhone,
+      sender_address: form.senderAddress, sender_city: city,
+      sender_pincode: form.senderPincode, sender_state: state,
+      sender_lat: form.senderLat || null, sender_lng: form.senderLng || null,
+      receiver_name: form.receiverName, receiver_phone: form.receiverPhone,
+      receiver_address: form.receiverAddress, receiver_city: city,
+      receiver_pincode: form.receiverPincode, receiver_state: state,
+      receiver_lat: form.receiverLat || null, receiver_lng: form.receiverLng || null,
+      package_type: form.packageType, weight_kg: weight,
+      description: form.description, amount: totalAmount * 100,
+      cod_charge: paymentMethod === 'cod' ? COD_CHARGE * 100 : 0,
+      payment_method: paymentMethod, payment_status: paymentStatus,
+      status: 'pending', vehicle_type: vehicle,
+      razorpay_order_id: razorpayOrderId || null,
+    })
+  }
+
   const handleSubmit = async () => {
     const { senderName, senderPhone, senderAddress, senderPincode, receiverName, receiverPhone, receiverAddress, receiverPincode } = form
     if (!senderName || !senderPhone || !senderAddress || !senderPincode ||
@@ -87,32 +115,61 @@ function BookForm() {
     if (senderPhone.length !== 10 || receiverPhone.length !== 10) { setError('Enter valid 10-digit phone numbers'); return }
     if (senderPincode.length !== 6 || receiverPincode.length !== 6) { setError('Enter valid 6-digit pincodes'); return }
     if (!user) { router.push('/auth/login?next=/book'); return }
-    if (paymentMethod === 'online') { setError('Online payment coming soon. Please use Cash on Delivery.'); return }
 
     setLoading(true); setError('')
+
     try {
       const trackingId = generateTrackingId()
-      const { error: dbError } = await supabase.from('bookings').insert({
-        tracking_id: trackingId, user_id: user.id,
-        sender_name: form.senderName, sender_phone: form.senderPhone,
-        sender_address: form.senderAddress, sender_city: city,
-        sender_pincode: form.senderPincode, sender_state: state,
-        sender_lat: form.senderLat || null, sender_lng: form.senderLng || null,
-        receiver_name: form.receiverName, receiver_phone: form.receiverPhone,
-        receiver_address: form.receiverAddress, receiver_city: city,
-        receiver_pincode: form.receiverPincode, receiver_state: state,
-        receiver_lat: form.receiverLat || null, receiver_lng: form.receiverLng || null,
-        package_type: form.packageType, weight_kg: weight,
-        description: form.description, amount: totalAmount * 100,
-        cod_charge: paymentMethod === 'cod' ? COD_CHARGE * 100 : 0,
-        payment_method: paymentMethod, payment_status: 'pending',
-        status: 'pending', vehicle_type: vehicle,
+
+      if (paymentMethod === 'cod') {
+        const { error: dbError } = await saveBooking(trackingId, 'pending')
+        if (dbError) throw new Error(dbError.message)
+        router.push(`/booking-confirmed?id=${trackingId}&method=cod`)
+        return
+      }
+
+      // Online payment — create Razorpay order first
+      const orderRes = await fetch('/api/razorpay/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: totalAmount * 100, trackingId }),
       })
+      const { orderId, error: orderError } = await orderRes.json()
+      if (orderError) throw new Error(orderError)
+
+      // Save booking with pending payment status
+      const { error: dbError } = await saveBooking(trackingId, 'pending', orderId)
       if (dbError) throw new Error(dbError.message)
-      router.push(`/booking-confirmed?id=${trackingId}&method=${paymentMethod}`)
+
+      // Open Razorpay checkout
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: totalAmount * 100,
+        currency: 'INR',
+        name: 'SpeedU',
+        description: `Delivery: ${form.senderAddress} → ${form.receiverAddress}`,
+        order_id: orderId,
+        prefill: { name: form.senderName, contact: `+91${form.senderPhone}` },
+        theme: { color: '#b91c1c' },
+        handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          const verifyRes = await fetch('/api/razorpay/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...response, trackingId }),
+          })
+          const { success, error: verifyError } = await verifyRes.json()
+          if (!success) { setError(verifyError || 'Payment verification failed'); return }
+          router.push(`/booking-confirmed?id=${trackingId}&method=online`)
+        },
+        modal: { ondismiss: () => { setLoading(false) } },
+      }
+      // @ts-expect-error Razorpay loaded via script tag
+      const rzp = new window.Razorpay(options)
+      rzp.open()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to place order.')
-    } finally { setLoading(false) }
+      setLoading(false)
+    }
   }
 
   const inputCls = "w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-red-500 transition"
@@ -316,7 +373,7 @@ function BookForm() {
                     <CreditCard className="h-4 w-4 text-blue-600" />
                     <div>
                       <div className="text-sm font-semibold text-gray-900">Pay Online</div>
-                      <div className="text-xs text-gray-400">Coming soon</div>
+                      <div className="text-xs text-gray-400">UPI, Card, Net Banking</div>
                     </div>
                   </label>
                 </div>
@@ -328,12 +385,12 @@ function BookForm() {
                 </div>
               )}
 
-              <button onClick={handleSubmit} disabled={loading || paymentMethod === 'online'}
+              <button onClick={handleSubmit} disabled={loading}
                 className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl transition-colors disabled:opacity-50 text-lg shadow-lg">
                 {loading ? 'Placing Order...' : '✓ Confirm Order'}
               </button>
               <p className="text-xs text-gray-400 text-center">
-                {paymentMethod === 'cod' ? 'Pay cash to delivery person at pickup' : 'Secured via Razorpay'}
+                {paymentMethod === 'cod' ? 'Pay cash to delivery person at pickup' : '100% secure · Powered by Razorpay'}
               </p>
             </div>
           </div>
