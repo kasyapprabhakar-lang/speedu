@@ -297,9 +297,9 @@ export default function HomePage() {
             <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-12">What Customers Say</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { name: 'Ravi Kumar', city: 'Bangalore', text: 'Booked a delivery for office documents. Picked up within 30 mins and delivered in 2 hours. Excellent!', stars: 5 },
-                { name: 'Priya Sharma', city: 'Delhi', text: 'Very easy to book online. Real-time tracking is fantastic. Will definitely use again.', stars: 5 },
-                { name: 'Arun Nair', city: 'Hyderabad', text: 'Sent a fragile item across the city. Arrived in perfect condition. Great service!', stars: 5 },
+                { name: 'Ravi Kumar', city: 'Muzaffarpur', text: 'Booked a delivery for office documents. Picked up within 30 mins and delivered in 2 hours. Excellent!', stars: 5 },
+                { name: 'Priya Sharma', city: 'Hyderabad', text: 'Very easy to book online. Real-time tracking is fantastic. Will definitely use again.', stars: 5 },
+                { name: 'Arun Nair', city: 'Chennai', text: 'Sent a fragile item across the city. Arrived in perfect condition. Great service!', stars: 5 },
               ].map((t) => (
                 <div key={t.name} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                   <div className="flex gap-0.5 mb-3">
