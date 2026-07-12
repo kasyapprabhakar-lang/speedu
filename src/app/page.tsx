@@ -135,7 +135,7 @@ export default function HomePage() {
                     <span>⏱️ {v.eta}</span>
                     {vehicle === 'mini-truck'
                       ? <span>📍 All of {state} · up to 300 km</span>
-                      : <span>📍 Within {city} · up to 30 km</span>
+                      : <span>📍 Within {city} · up to 15 km</span>
                     }
                   </div>
                 ))}

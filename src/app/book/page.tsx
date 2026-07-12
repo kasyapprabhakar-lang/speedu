@@ -21,7 +21,7 @@ const CITY_STATE: Record<string, string> = {
 
 // Porter-style distance-based pricing
 const VEHICLE_CONFIG = {
-  'two-wheeler': { baseFare: 55, perKm: 12, freeKm: 1, label: '🏍️ 2-Wheeler', maxKg: 20, maxDistanceKm: 30 },
+  'two-wheeler': { baseFare: 55, perKm: 12, freeKm: 1, label: '🏍️ 2-Wheeler', maxKg: 20, maxDistanceKm: 15 },
   'mini-truck':  { baseFare: 200, perKm: 20, freeKm: 1, label: '🚐 Mini Truck', maxKg: 200, maxDistanceKm: 300 },
 }
 
