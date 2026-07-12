@@ -172,6 +172,7 @@ function PMForm() {
                     placeholder="Search pickup address..."
                     value={form.fromAddress}
                     city={city}
+                    boundsArea="India"
                     onSelect={r => setForm(f => ({ ...f, fromAddress: r.address, fromPincode: r.pincode || f.fromPincode }))}
                   />
                 </div>
@@ -205,6 +206,7 @@ function PMForm() {
                     placeholder="Search drop address..."
                     value={form.toAddress}
                     city={city}
+                    boundsArea="India"
                     onSelect={r => setForm(f => ({ ...f, toAddress: r.address, toPincode: r.pincode || f.toPincode }))}
                   />
                 </div>
